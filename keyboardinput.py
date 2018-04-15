@@ -3,11 +3,13 @@ from matplotlib import pyplot as plt
 from matplotlib import animation
 import _thread
 from pynput import keyboard
+import time
 from random import randint
 fig = plt.figure()
 fig.set_dpi(100)
-fig.set_size_inches(7, 6.5)
+fig.set_size_inches(8, 6.5)
 k = ''
+
 x = 0
 y = 0
 
@@ -43,30 +45,18 @@ def getData():
 
 
 def init():
-    patch.center = (0, 0)
+    global x, y
+    patch.center = (x, y)
+    print("this section run")
     ax.add_patch(patch)
     return patch,
-
-
-
-
-
 
 def animate(i):
 
     while (True):
         global x, y, k
         x, y = patch.center
-        if x >= 9:
-            flag1 = 1
-        elif x <= -9:
-            flag1 = 1
-        else:
-            flag1 = 0
-
         [x,y] = getData()
-
-        #print(str(flag1) + " " + str(x))
         patch.center = (x, y)
 
         return patch,
