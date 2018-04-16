@@ -1,6 +1,8 @@
 import sys
 from PyQt5.QtWidgets import QApplication, QMainWindow, QMenu, QVBoxLayout, QSizePolicy, QMessageBox, QWidget, QPushButton
-from PyQt5.QtGui import QIcon
+from PyQt5.QtGui import *
+from PyQt5.QtCore import  *
+
 
 from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg as FigureCanvas
 from matplotlib.figure import Figure
@@ -18,22 +20,25 @@ class App(QMainWindow):
         self.left = 50
         self.top = 50
         self.title = 'Moving'
-        self.width = 840
-        self.height = 600
+        self.width = 640
+        self.height = 400
         self.initUI()
 
     def initUI(self):
         self.setWindowTitle(self.title)
         self.setGeometry(self.left, self.top, self.width, self.height)
 
+        #m = PlotCanvas()
+        #m.result()
+        #m.move(0, 0)
         print("other section runs")
         button = QPushButton('PyQt5 button', self)
         button.setToolTip('This s an example button')
-        button.move(600, 0)
+        button.move(500, 0)
         button.resize(140, 100)
 
-        m = PlotCanvas(self, width = 6, height = 5)
-        
+        m = PlotCanvas(self, width = 5, height = 4)
+
         self.show()
 
 
@@ -54,6 +59,7 @@ class PlotCanvas(FigureCanvas):
         self.ax = plt.axes(xlim = (-10,20), ylim = (-10,20))
         self.patch = plt.Circle((5,-5), 0.75, fc = 'y')
         self.result()
+        self.is_pressed = False
 
     def start(self):
 
@@ -76,7 +82,7 @@ class PlotCanvas(FigureCanvas):
                                        frames=360,
                                        interval=20,
                                        blit=True)
-        lis = keyboard.Listener(on_press=self.on_press)
+        lis = keyboard.Listener(on_press=self.on_press, on_release = self.on_release)
         lis.start()
         plt.show()
         return anim
@@ -85,27 +91,38 @@ class PlotCanvas(FigureCanvas):
 
         try:
             self.k = key.char  # single-char keys
+            self.is_pressed = True
         except:
             self.k = key.name  # other keys
         if key == keyboard.Key.esc: return False  # stop listener
 
+    def on_release(self, key):
+        try:
+            self.k = key.char  # single-char keys
+            self.is_pressed = False
+        except:
+            self.k = key.name  # other keys
+        if key == keyboard.Key.esc: return False  # stop listener
+
+
     def getData(self):
-        if self.k == 'w':
+        if self.k == 'w' and self.is_pressed:
             self.y = self.y + 0.1
             print('Key pressed: w')
             print(self.y)
-        elif self.k == 's':
+        elif self.k == 's' and self.is_pressed:
             self.y = self.y - 0.1
             print('Key pressed: s')
             print(self.y)
-        elif self.k == 'a':
+        elif self.k == 'a' and self.is_pressed:
             self.x = self.x - 0.1
             print('Key pressed: k')
             print(self.x)
-        elif self.k == 'd':
+        elif self.k == 'd' and self.is_pressed:
             self.x = self.x + 0.1
             print('Key pressed: d')
             print(self.x)
+
 
     def result(self):
         self.showAnimation()
