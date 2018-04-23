@@ -7,17 +7,39 @@ from pynput import keyboard
 class App(QMainWindow):
     def __init__(self):
         super().__init__()
-
+        print("ths one is on github")
         self.setGeometry(100,100,1000,800)
         self.setWindowTitle("New GUI Interface Window")
+        self.currentState = 0
+
+        #self.directionCode =0
+
         self.obstCounter = 0
         self.x = 200
         self.y = 200
         self.d = []
-        self.l2 = QtWidgets.QLabel(self)
-        self.l2.setPixmap(QtGui.QPixmap('smallcar.png'))
-        self.l2.move(self.x,self.y)
-        self.l2.adjustSize()
+
+        #loading image for tank
+
+        #self.tank = QtWidgets.QLabel(self)
+        #self.tank.setPixmap(QtGui.QPixmap('smallcar.png'))
+        #self.tank.move(self.x,self.y)
+        #self.tank.adjustSize()
+
+        self.image= QtGui.QImage('smallcar.png')
+
+        self.pixmap = QtGui.QPixmap(self.image)
+
+        self.tank = QtWidgets.QLabel(self)
+        self.tank.setAlignment(QtCore.Qt.AlignCenter)
+        self.tank.setPixmap(self.pixmap)
+        self.tank.adjustSize()
+        self.tank.move(self.x, self.y)
+
+
+
+
+
 
         self.showObstacle(115,15)
 
@@ -40,21 +62,34 @@ class App(QMainWindow):
 
         if e.key() == Qt.Key_W:
             #print("w")
+
+            self.changeHeading(0)
             self.moveCar(0,-10)
+
         elif e.key() == Qt.Key_S:
             #print("S")
+
+            self.changeHeading(2)
             self.moveCar(0,10)
+
+
         elif e.key() == Qt.Key_D:
             #print("D")
+
+            self.changeHeading(1)
             self.moveCar(10,0)
+
         elif e.key() == Qt.Key_A:
             #print("A")
+
+            self.changeHeading(3)
             self.moveCar(-10,0)
+
 
     def moveCar(self, new_x, new_y):
         self.x += new_x
         self.y += new_y
-        self.l2.move(self.x, self.y)
+        self.tank.move(self.x, self.y)
 
     def showObstacle(self, Obs_x, Obs_y):
         self.obstCounter += 1
@@ -72,6 +107,31 @@ class App(QMainWindow):
         #this is where the sensor sends the data and checks where the obstacle is
         #for now it uses fake data
         cordinate = (205,305)
+
+    def changeHeading(self, directionCode):
+        print("current state : " + str(self.currentState) + " directionCode : " + str(directionCode))
+        if self.currentState == directionCode:
+            print("currentState == Directioncode")
+        elif self.currentState - directionCode == -1 or self.currentState - directionCode == 3:
+            print("rotate 90 degrees")
+            transform = QtGui.QTransform().rotate(90)
+            self.pixmap = self.pixmap.transformed(transform)
+            self.tank.setPixmap(self.pixmap)
+        elif self.currentState - directionCode == -2 or self.currentState - directionCode == 2:
+            print("rotate 180 degree")
+            transform = QtGui.QTransform().rotate(180)
+            self.pixmap = self.pixmap.transformed(transform)
+            self.tank.setPixmap(self.pixmap)
+        elif self.currentState - directionCode == -3 or self.currentState - directionCode == 1:
+            print("rotate 270 degree")
+            transform = QtGui.QTransform().rotate(270)
+            self.pixmap = self.pixmap.transformed(transform)
+            self.tank.setPixmap(self.pixmap)
+        self.currentState = directionCode
+
+
+
+
 
 
 
