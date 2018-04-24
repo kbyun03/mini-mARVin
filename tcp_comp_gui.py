@@ -44,14 +44,12 @@ class MiniMarvin(QWidget):
         self.statusLabel = QLabel("Not Connected")
 
         
-        self.hbox = QHBoxLayout(self)
-        self.hbox.addWidget(self.ipAddrL)
-        self.hbox.addWidget(self.ipAddr)
-        self.hbox.addWidget(self.connectButton)
-
         self.vbox = QVBoxLayout(self)
-        self.vbox.addStretch(1)
-        self.vbox.addLayout(self.hbox)
+        self.vbox.addWidget(self.ipAddrL)
+        self.vbox.addWidget(self.ipAddr)
+        self.vbox.addWidget(self.connectButton)
+        self.vbox.addWidget(self.statusLabel)
+
         self.setLayout(self.vbox)
 
         self.connected = False
