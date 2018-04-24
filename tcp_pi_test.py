@@ -3,7 +3,7 @@
 from threading import Thread
 import socket
 import time
-import RPi.GPIO as GPIO
+#import RPi.GPIO as GPIO
 import sys
 
 VERBOSE = True
@@ -16,10 +16,11 @@ def debug(text):
 
 # ---------------------- class SocketHandler ------------------------
 class SocketHandler(Thread):
-    def __init__(self, conn, motorController):
+    #def __init__(self, conn, motorController):
+    def __init__(self, conn):
         Thread.__init__(self)
         self.conn = conn
-        self.motorController = motorController
+        #self.motorController = motorController
 
     def run(self):
         global isConnected
@@ -44,7 +45,24 @@ class SocketHandler(Thread):
         debug("SocketHandler terminated")
 
     def executeCommand(self, cmd):
-        debug("Calling executeCommand() with  cmd: " + cmd[1])
+
+        ## --- for debug
+        print("code gets here")
+        print(cmd)
+
+        debug("Calling executeCommand() with  cmd: " + cmd[0])
+        
+        if cmd == "F":
+            print("F Recieved")
+        elif cmd == "B":
+            print("B Recieved")
+        elif cmd == "L":
+            print("L Recieved")
+        elif cmd == "R":
+            print("R Recieved")
+        
+        """
+        
         if cmd[1] == "F":  # remove trailing "\0"
             if self.motorController.prev_command != cmd[1]:
                 self.motorController.stop()
@@ -67,9 +85,10 @@ class SocketHandler(Thread):
         elif cmd[1] == "C":
             if self.motorController.prev_command != cmd[1]:
                 self.motorController.close()
+        """
 
 # ----------------- End of SocketHandler ----------------------
-
+"""
 class MotorController():
     def __init__(self, pwmR, fwdR, revR, pwmL, fwdL, revL):
         self.fwdR = fwdR
@@ -156,7 +175,8 @@ class MotorController():
         
     def setPrevCommand(self,prev_command):
         self.prev_command = prev_command
-    
+"""
+
 def main(args):
       
     serverSocket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
@@ -177,13 +197,21 @@ def main(args):
     while True:
         debug("Calling blocking accept()...")
         conn, addr = serverSocket.accept()
-        motorController = MotorController(18,23,24,19,22,27)
+        #motorController = MotorController(18,23,24,19,22,27)
         print ("Connected with client at " + addr[0])
         isConnected = True
-        socketHandler = SocketHandler(conn, motorController)
+        #socketHandler = SocketHandler(conn, motorController)
         # necessary to terminate it at program termination:
-        socketHandler.setDaemon(True)  
+        #socketHandler.setDaemon(True)
+        #socketHandler.start()
+
+        ## ---- for debug purposes -------##
+        socketHandler = SocketHandler(conn)
+        socketHandler.setDaemon(True)
         socketHandler.start()
+
+
+
         t = 0
         while isConnected:
             # necessary to terminate it at program termination:

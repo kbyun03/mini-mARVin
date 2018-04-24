@@ -10,8 +10,7 @@ class App(QWidget):
         print("ths one is on github")
         self.setGeometry(100,100,800,600)
         #Assuming the world is 2m(width) by 1m(height)
-        self.pixbycmWidth = 2000/800
-        self.pixbycmHeight = 1000/600
+
 
         self.setWindowTitle("New GUI Interface Window")
         self.currentState = 0
@@ -39,13 +38,8 @@ class App(QWidget):
         self.tank.setPixmap(self.pixmap)
         self.tank.adjustSize()
         self.tank.move(self.x, self.y)
+        self.showObstacle(205, 305)
 
-
-
-
-
-
-        self.showObstacle(115,15)
 
 
         self.show()
@@ -107,12 +101,9 @@ class App(QWidget):
 
         print("Obstacle Run")
 
-    def detect(self):
-        #this is where the sensor sends the data and checks where the obstacle is
-        #for now it uses fake data
-        cordinate = (205,305)
-
     def changeHeading(self, directionCode):
+        #direction data from IMU
+        #this is temporary code
         print("current state : " + str(self.currentState) + " directionCode : " + str(directionCode))
         if self.currentState == directionCode:
             print("currentState == Directioncode")
@@ -133,19 +124,6 @@ class App(QWidget):
             self.tank.setPixmap(self.pixmap)
         self.currentState = directionCode
 
-
-
-
-
-
-
-
-
-"""
-
-if __name__ == '__main__':
-    app = QApplication(sys.argv)
-    ex = App()
-
-    sys.exit(app.exec_())
-"""
+    def printStatement(self, message):
+        print("this is from print Statement in GUI")
+        print(message)

@@ -70,13 +70,18 @@ class MiniMarvin(QWidget):
         self.show()
         self.mutex = Lock()
 
+
     def openWindow(self):
+
 
         self.window = QMainWindow()
         self.myGui = App(self.window)
 
         self.stacked_layout = QStackedLayout()
         self.stacked_layout.addWidget(self.myGui)
+
+
+
 
 
     def displayError(self, socketError):
@@ -116,6 +121,11 @@ class MiniMarvin(QWidget):
             self.statusLabel.setText("Not Connected")
             self.connectButton.setText("Connect")
             self.connected = False;
+
+            #after connection is lost close all the window and deallocate memories
+            print("connection lost close all windows and deallocatate ")
+            self.myGui.close()
+
             self.lis.stop()
 
         
@@ -135,12 +145,13 @@ class MiniMarvin(QWidget):
             print("sending: " + message)
             # now use the QDataStream and write the byte array to it.
             # now send the QByteArray.
+            #self.myGui.getPos(message)
             self.tcpSocket.sendall(message.encode())
             
         except socket.error as msg:
             print ("excepton in sending data: " + str(msg))
             self.tcpSocket.close()
-            self.connected = false
+            self.connected = False
         
         if key == keyboard.Key.esc: return False #stop listener
 
