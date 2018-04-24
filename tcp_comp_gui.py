@@ -19,6 +19,7 @@ from PyQt5.QtNetwork import (QAbstractSocket, QHostInfo, QTcpSocket)
 from pynput import keyboard
 from threading import Thread, Lock
 import socket
+import traceback
 
 class MiniMarvin(QWidget):
     
@@ -55,7 +56,7 @@ class MiniMarvin(QWidget):
 
 
         self.keylist = []
-        self.lis = keyboard.Listener(on_press=self.on_press)
+        #self.lis = keyboard.Listener(on_press=self.on_press)
         
         
         self.resize(500,400)
@@ -73,7 +74,7 @@ class MiniMarvin(QWidget):
         else:
             print(self, "The following error occurred: %s." % self.tcpSocket.errorString())
 
-        self.lis.stop()
+        #self.lis.stop()
         
     def center(self):
         '''centers the window on the screen'''
@@ -94,38 +95,59 @@ class MiniMarvin(QWidget):
             self.statusLabel.setText("Connected")
             self.connectButton.setText("Disconnect")
             self.connected = True;
-            self.lis.start()
+            #self.lis.start()
         else:
             self.tcpSocket.close()
             self.statusLabel.setText("Not Connected")
             self.connectButton.setText("Connect")
             self.connected = False;
-            self.lis.stop()
+            #self.lis.stop()
         
-    def on_press(self, key):
+    # def on_press(self, key):
+    #     try:
+    #         message = ''
+    #         print("sending: " + message)
+    #         if key.char == 'w':
+    #             message = "F"
+    #         elif key.char == 's':
+    #             message = "B"
+    #         elif key.char == 'd':
+    #             message = "R"
+    #         elif key.char == 'a':
+    #             message = "L"
+    #         elif key.char == 'q':
+    #             message = "S"
+    #         print("sending: " + message)
+    #         # now use the QDataStream and write the byte array to it.
+    #         # now send the QByteArray.
+    #         self.tcpSocket.sendall(message.encode())
+    #
+    #     except socket.error as msg:
+    #         print ("excepton in sending data: " + str(msg))
+    #         self.tcpSocket.close()
+    #         self.connected = False
+    #
+    #     if key == keyboard.Key.esc: return False #stop listener
+    def keyPressEvent(self, e):
         try:
+            print("a key was pressed")
             message = ''
-            if key.char == 'w':
+            if e.key() == Qt.Key_W:
                 message = "F"
-            elif key.char == 's':
+
+            elif e.key() == Qt.Key_S:
                 message = "B"
-            elif key.char == 'd':
+
+            elif e.key() == Qt.Key_D:
                 message = "R"
-            elif key.char == 'a':
+
+            elif e.key() == Qt.Key_A:
                 message = "L"
-            elif key.char == 'q':
-                message = "S"
-            print("sending: " + message)
-            # now use the QDataStream and write the byte array to it.
-            # now send the QByteArray.
+            print("sending " + message)
             self.tcpSocket.sendall(message.encode())
-            
-        except socket.error as msg:
-            print ("excepton in sending data: " + str(msg))
-            self.tcpSocket.close()
-            self.connected = false
-        
-        if key == keyboard.Key.esc: return False #stop listener
+        except:
+            traceback.print_exc()
+            #self.tcpSocket.close()
 
 
     
