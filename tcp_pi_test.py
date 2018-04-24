@@ -13,6 +13,7 @@ P_BUTTON = 24 # adapt to your wiring
 def debug(text):
     if VERBOSE:
         print( "Debug:---", text)
+        #blah
 
 # ---------------------- class SocketHandler ------------------------
 class SocketHandler(Thread):
