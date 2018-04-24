@@ -1,14 +1,18 @@
 import sys
 from PyQt5 import QtWidgets, QtGui, QtCore
-from PyQt5.QtWidgets import QApplication, QMainWindow
+from PyQt5.QtWidgets import QApplication, QMainWindow, QWidget
 from PyQt5.QtCore import Qt
 from pynput import keyboard
 
-class App(QMainWindow):
-    def __init__(self):
+class App(QWidget):
+    def __init__(self, OtherWindow):
         super().__init__()
         print("ths one is on github")
-        self.setGeometry(100,100,1000,800)
+        self.setGeometry(100,100,800,600)
+        #Assuming the world is 2m(width) by 1m(height)
+        self.pixbycmWidth = 2000/800
+        self.pixbycmHeight = 1000/600
+
         self.setWindowTitle("New GUI Interface Window")
         self.currentState = 0
 
@@ -137,10 +141,11 @@ class App(QMainWindow):
 
 
 
-
+"""
 
 if __name__ == '__main__':
     app = QApplication(sys.argv)
     ex = App()
 
     sys.exit(app.exec_())
+"""

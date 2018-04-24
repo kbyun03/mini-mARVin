@@ -10,15 +10,18 @@ Author: Jan Bodnar
 Website: zetcode.com 
 Last edited: August 2017
 """
-
+from new_GUI import App
 from PyQt5.QtWidgets import QWidget,QLabel,QLineEdit, QHBoxLayout,QVBoxLayout,QMainWindow,QPushButton, QFrame, QDesktopWidget, QApplication
 from PyQt5.QtCore import Qt, QIODevice, QByteArray, QBasicTimer, pyqtSignal, QDataStream, QSettings, QTimer
-from PyQt5.QtGui import QPainter, QColor 
+from PyQt5.QtGui import QPainter, QColor
+from PyQt5.Qt import QStackedLayout
+
 import sys, random
 from PyQt5.QtNetwork import (QAbstractSocket, QHostInfo, QTcpSocket)
 from pynput import keyboard
 from threading import Thread, Lock
 import socket
+
 
 class MiniMarvin(QWidget):
     
@@ -62,9 +65,19 @@ class MiniMarvin(QWidget):
         self.center()
 
 
-        self.setWindowTitle('mini-mARVin')        
+        self.setWindowTitle('mini-mARVin')
+
         self.show()
         self.mutex = Lock()
+
+    def openWindow(self):
+
+        self.window = QMainWindow()
+        self.myGui = App(self.window)
+
+        self.stacked_layout = QStackedLayout()
+        self.stacked_layout.addWidget(self.myGui)
+
 
     def displayError(self, socketError):
         self.connected = False
@@ -94,6 +107,9 @@ class MiniMarvin(QWidget):
             self.statusLabel.setText("Connected")
             self.connectButton.setText("Disconnect")
             self.connected = True;
+
+            self.openWindow()
+
             self.lis.start()
         else:
             self.tcpSocket.close()
@@ -101,6 +117,7 @@ class MiniMarvin(QWidget):
             self.connectButton.setText("Connect")
             self.connected = False;
             self.lis.stop()
+
         
     def on_press(self, key):
         try:
