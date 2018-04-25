@@ -56,7 +56,6 @@ class MiniMarvin(QWidget):
 
 
         self.keylist = []
-        self.lis = keyboard.Listener(on_press=self.on_press)
         
         
         self.resize(500,400)
@@ -107,7 +106,7 @@ class MiniMarvin(QWidget):
             self.connected = True;
 
             self.openWindow()
-
+            self.lis = keyboard.Listener(on_press=self.on_press)
             self.lis.start()
         else:
             self.tcpSocket.close()
@@ -138,7 +137,7 @@ class MiniMarvin(QWidget):
         except socket.error as msg:
             print ("excepton in sending data: " + str(msg))
             self.tcpSocket.close()
-            self.connected = false
+            self.connected = False
         
         if key == keyboard.Key.esc: return False #stop listener
 
