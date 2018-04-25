@@ -5,6 +5,7 @@ import socket
 import time
 import RPi.GPIO as GPIO
 import sys
+import traceback
 
 VERBOSE = True
 IP_PORT = 12000
@@ -30,8 +31,9 @@ class SocketHandler(Thread):
                 debug("Calling blocking conn.recv()")
                 cmd = self.conn.recv(4096)
                 cmdStr = str(cmd.decode())
-            except:
-                debug("exception in conn.recv()") 
+            except socket.error as msg:
+                debug("exception in conn.recv()" + str(msg))
+                isConnected = False
                 # happens when connection is reset from the peer
                 break
             debug("Received cmd: " + cmdStr)
@@ -39,34 +41,74 @@ class SocketHandler(Thread):
                 break
             self.executeCommand(cmdStr)
         self.conn.close()
+        GPIO.output(18,0)
+        GPIO.output(23,0)
+        GPIO.output(24,0)
+
+        GPIO.output(19,0)
+        GPIO.output(22,0)
+        GPIO.output(27,0)
+        self.motorController.close()
+        
         print ("Client disconnected. Waiting for next client...")
         isConnected = False
         debug("SocketHandler terminated")
 
     def executeCommand(self, cmd):
-        debug("Calling executeCommand() with  cmd: " + cmd[1])
-        if cmd[1] == "F":  # remove trailing "\0"
-            if self.motorController.prev_command != cmd[1]:
-                self.motorController.stop()
-                self.motorController.goForward()
-        elif cmd[1] == "B":
-            if self.motorController.prev_command != cmd[1]:
-                self.motorController.stop()
-                self.motorController.goBackward()
-        elif cmd[1] == "R":
-            if self.motorController.prev_command != cmd[1]:
-                self.motorController.stop()
-                self.motorController.turnRight()
-        elif cmd[1] == "L":
-            if self.motorController.prev_command != cmd[1]:
-                self.motorController.stop()
-                self.motorController.turnLeft()
-        elif cmd[1] == "S":
-            if self.motorController.prev_command != cmd[1]:
-                self.motorController.stop()
-        elif cmd[1] == "C":
-            if self.motorController.prev_command != cmd[1]:
+        debug("Calling executeCommand() with  cmd: " + cmd)
+        if cmd == "F":  # remove trailing "\0"
+            debug("cmd==f")
+            try: 
+                if self.motorController.prev_command != cmd:
+                    self.motorController.stop()
+                    self.motorController.goForward()
+            except:
+                debug("exception in move forward execute cmd")
+                traceback.print_exc(file=sys.stdout)
                 self.motorController.close()
+        elif cmd == "B":
+            try: 
+                if self.motorController.prev_command != cmd:
+                    self.motorController.stop()
+                    self.motorController.goBackward()
+            except:
+                debug("exception in move backward execute cmd")
+                traceback.print_exc(file=sys.stdout)
+                self.motorController.close()
+        elif cmd == "R":
+            try: 
+                if self.motorController.prev_command != cmd:
+                    self.motorController.stop()
+                    self.motorController.turnRight()
+            except:
+                debug("exception in turn right execute cmd")
+                traceback.print_exc(file=sys.stdout)
+                self.motorController.close()
+                    
+        elif cmd == "L":
+            try:
+                if self.motorController.prev_command != cmd:
+                    self.motorController.stop()
+                    self.motorController.turnLeft()
+            except:
+                debug("exception in turn left execute cmd")
+                traceback.print_exc(file=sys.stdout)
+                self.motorController.close()
+        elif cmd == "S":
+            try:
+                self.motorController.stop()
+            except:
+                debug("exception in stop execute cmd")
+                traceback.print_exc(file=sys.stdout)
+                self.motorController.close()
+        elif cmd == "C":
+            try:
+                self.motorController.close()
+            except:
+                debug("exception in stop execute cmd")
+                traceback.print_exc(file=sys.stdout)
+                self.motorController.close()
+            
 
 # ----------------- End of SocketHandler ----------------------
 
@@ -85,8 +127,8 @@ class MotorController():
         GPIO.setup(revR, GPIO.OUT) # reverse Right
 
         GPIO.setup(pwmL, GPIO.OUT) # pwm Left
-        GPIO.setup(fwdL, GPIO.OUT) # forward Right
-        GPIO.setup(revL, GPIO.OUT) # reverse Right
+        GPIO.setup(fwdL, GPIO.OUT) # forward Left
+        GPIO.setup(revL, GPIO.OUT) # reverse Left
 
         GPIO.output(18,0)
         GPIO.output(23,0)
@@ -99,51 +141,57 @@ class MotorController():
         self.pwmR = GPIO.PWM(pwmR,100)
         self.pwmL = GPIO.PWM(pwmL,100)
 
-    def forwardRight(self, speed = 25):
+    def forwardRight(self, speed = 50):
         GPIO.output(23,0)
         GPIO.output(24,1)
         self.pwmR.start(speed)
 
-    def backwardRight(self, speed = 25):
+    def backwardRight(self, speed = 50):
         GPIO.output(23,1)
         GPIO.output(24,0)
         self.pwmR.start(speed)
         
-    def forwardLeft(self, speed=25):
+    def forwardLeft(self, speed=50):
         GPIO.output(22, 1)
         GPIO.output(27,0)
         self.pwmL.start(speed)
 
-    def backwardLeft(self, speed=25):
+    def backwardLeft(self, speed=50):
         GPIO.output(22,0)
         GPIO.output(27,1)
         self.pwmL.start(speed)
 
-    def goForward(self, speed = 25):
+    def goForward(self, speed = 50):
         self.forwardLeft(speed)
         self.forwardRight(speed)
         self.setPrevCommand("F")
 
-    def goBackward(self, speed = 25):
+    def goBackward(self, speed = 50):
         self.backwardLeft(speed)
         self.backwardRight(speed)
         self.setPrevCommand("B")
 
-    def turnLeft(self, speed = 25):
+    def turnLeft(self, speed = 50):
         self.forwardRight(speed)
         self.backwardLeft(speed)
-        self.setPrevCommand("R")
+        self.setPrevCommand("L")
 
-    def turnRight(self, speed = 25):
+    def turnRight(self, speed = 50):
         self.forwardLeft(speed)
         self.backwardRight(speed)
-        self.setPrevCommand("L")
+        self.setPrevCommand("R")
 
     def stopLeft(self):
         self.pwmL.stop()
+        GPIO.output(19,0)
+        GPIO.output(22,0)
+        GPIO.output(27,0)
         
     def stopRight(self):
         self.pwmR.stop()
+        GPIO.output(18,0)
+        GPIO.output(23,0)
+        GPIO.output(24,0)
         
     def stop(self):
         self.stopLeft()
@@ -188,6 +236,7 @@ def main(args):
         while isConnected:
             # necessary to terminate it at program termination:
             x = 0
+        socketHandler.join()
         conn.close()
         GPIO.cleanup()
         
