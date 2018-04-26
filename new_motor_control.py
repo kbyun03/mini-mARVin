@@ -7,6 +7,7 @@ from threading import Lock, Thread
 import socket
 import time
 import sys
+from imuHeading import ImuPosHeading
 
 VERBOSE = True
 
@@ -200,7 +201,7 @@ class Sonar():
             if self.killThread:
                 break
 
-    def getObstacleLoc():
+    def getObstacleLoc(self, heading):
         '''
         Gives obstacle locations as x,y displacements from vechicle
         ex: if the front sensor reads an object that is 20cm away and the
@@ -427,24 +428,26 @@ class MotorL(SourceMixin, CompositeDevice):
 def main(args):
 
     sockConn = SocketConnect(12000) ## starts recv and send threads; recv thread passes cmds directly to executeCommand to control motor
-     self.sonarObj = Sonar()
+    sonarObj = Sonar()
+    imuObj = ImuPosHeading()
     while(1):
         obstLocString = ''
-        self.sonarObj.enableSonar('front')
-        self.sonarObj.enableSonar('back')
-        self.sonarObj.enableSonar('left')
-        self.sonarObj.enableSonar('right')
-        self.sonarObj.startReading()
+        sonarObj.enableSonar('front')
+        sonarObj.enableSonar('back')
+        sonarObj.enableSonar('left')
+        sonarObj.enableSonar('right')
+        sonarObj.startReading()
         while sockConn.connected:
-            obstLocString = self.sonarObj.getObstacleLoc()
+            heading = imuObj.readIMU()
+            obstLocString = sonarObj.getObstacleLoc(heading)
             if len(obstLocString) is not 0:
-                self.sockConn.addToSendMessage(obstLocString, 1) # 1 for obst loc, 0 for marvin loc
+                sockConn.addToSendMessage(obstLocString, 1) # 1 for obst loc, 0 for marvin loc
 
-        self.sonarObj.stopReading()
-        self.sonarObj.disableSonar('front')
-        self.sonarObj.disableSonar('back')
-        self.sonarObj.disableSonar('left')
-        self.sonarObj.disableSonar('right')
+        sonarObj.stopReading()
+        sonarObj.disableSonar('front')
+        sonarObj.disableSonar('back')
+        sonarObj.disableSonar('left')
+        sonarObj.disableSonar('right')
 
 
 
