@@ -2,6 +2,7 @@ from gpiozero.output_devices import PWMOutputDevice, DigitalOutputDevice
 from gpiozero.devices import GPIODevice, Device, CompositeDevice
 from gpiozero.threads import GPIOThread
 from gpiozero.mixins import SourceMixin
+from gpiozero.input_devices import DistanceSensor
 from threading import Lock, Thread
 import socket
 import time
@@ -13,13 +14,15 @@ def debug(text):
     if VERBOSE:
         print( "Debug:---", text)
 
+
+
 class SocketConnect():
     def __init__(self,port=12000):
         self.socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         self.socket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
         self.host = ''
         self.port = port;
-        
+
         try:
             self.socket.bind((self.host,self.port))
         except socket.error as msg:
@@ -28,14 +31,30 @@ class SocketConnect():
         self.connected = False
         self.openConnection = False
         self.quit = False
+        self.sendMessage = ''
         self.socket.listen(10)
+        self.messageType = {0:'MARV', 1:'OBST'}
         debug('listening...')
         self.tConn = Thread(name = 'conn', target = self.checkConnection)
-        #tSend = threading.Thread(name = 'send', target = self.socketSender)
+        self.tSend = threading.Thread(name = 'send', target = self.socketSender)
         self.tRecv = Thread(name = 'recv', target = self.socketReciever)
         self.mutex = Lock()
         self.tConn.start()
-        
+
+    def addToSendMessage(self, msg, type):
+        '''
+            msg is data as a string of x,y coord
+            type is either 0 for marvin loc or 1 for obstacle loc
+
+            message types will be delineated by ';', data values (such as diff obstacle locations)
+            will be delineated by ' '
+
+         '''
+        self.mutex.acquire()
+        self.sendMessage = self.sendMessage + self.messageType[type]
+        for i in len(self.messageType):
+            self.sendMessage = self.sendMessage + self.messageType[i] + msg + ';'
+        self.mutex.release()
 
     def checkConnection(self):
         while (1):
@@ -46,7 +65,7 @@ class SocketConnect():
                 self.connected = True
                 self.openConnection = True
                 self.mutex.release()
-                #tSend.start()
+                self.tSend.start()
                 self.tRecv.start()
                 self.motorR = MotorR()
                 self.motorL = MotorL()
@@ -58,10 +77,24 @@ class SocketConnect():
                     self.closeConn()
                     self.openConnection = False
                 break
-        
-         
-                
-        
+
+
+   def socketSender(self):
+       while(1):
+           if len(self.sendMessage) is not 0:
+               try:
+                   self.mutex.acquire()
+                   self.conn.sendall(self.sendMessage.encode())
+                   debug('sending message: ' + self.sendMessage)
+                   self.sendMessage = ''
+                   self.mutex.release()
+               except socket.error as eMsg:
+                   debug('exception occured in conn.sendall():' + str(eMsg))
+                   self.mutex.acquire()
+                   self.connected = False
+                   self.mutex.release()
+                   break
+
     def socketReciever(self):
         while (1):
             cmd = ''
@@ -81,9 +114,9 @@ class SocketConnect():
                 self.connected = False
                 self.mutex.release()
                 break
-            
+
             self.executeCommand(cmdStr)
-            
+
     def closeConn(self):
         try:
             #self.tSend.join()
@@ -118,45 +151,97 @@ class SocketConnect():
         elif cmd == 'S':
             self.motorL.stop()
             self.motorR.stop()
-            
+
+class Sonar():
+    def __init__(self):
+        self.sonarSensors = { 'front': 0, 'back': 1, 'left': 2, 'right':3}
+
+        self.sonar0 = DistanceSensor(echo=17, trigger=14, max_distance = 4) # front
+        self.sonar1 = DistanceSensor(echo=13, trigger=26,max_distance = 4 ) # back
+        self.sonar2 = DistanceSensor(echo=5, trigger = 6, max_distance = 4) # left
+        self.sonar3 = DistanceSensor(echo=16, trigger=12, max_distance = 4) # right
+
+        self.distData = [] # list of data read from sonars... each entry is in form [sonarNum, dist]
+
+        self.currSonars = [] # this list will represent the currently enabled sonar sensors at any time
+        self.currSonarInd = []
+
+        self.obstacleLoc = [] # this list will hold obstacle locations as X,Y coordinates
+
+        self.killThread = False # this will be set
+        self.tRead = Thread(target = readSonar, name = 'read')
+
+    def enableSonar(self, sonarName):
+        '''sonarName should be given as a string: 'front' '''
+
+        self.currSonars.append(getattr(self, 'sonar' + str(self.sonarSensors[sonarToEnable])))
+        self.currSonarInd.append(sonarName)
+
+    def disableSonar(self, sonarName):
+        '''sonarName should be given as a string: 'front' '''
+        ind = self.currSonarInd.index(sonarName)
+        self.currSonars[ind].close()
+        self.currSonarInd.pop(ind)
+        self.currSonars.pop(ind)
+
+    def startReading(self):
+        ''' kicks off thread'''
+        tRead.start()
+
+    def stopReading(self):
+        self.killThread = True;
+
+    def readSonar(self): # this is a thread
+        ''' adds distance read to distance list; dist is in m '''
+        while(1):
+            for i in self.currSonarInd:
+                self.distData.append([self.sonarSensors[i], self.currSonars[i].distance()])
+
+            if self.killThread:
+                break
+
+    def getObstacleLoc():
+        '''
+        Gives obstacle locations as x,y displacements from vechicle
+        ex: if the front sensor reads an object that is 20cm away and the
+            left sensor reads an object that is 30 cm away, then '[20,0] [0,30]' is
+            returned
+        '''
+        xyListString = ''
+        if len(self.distData) != 0:
+            for i in len(self.distData):
+                if self.distData[i][1] == 0: # if front sensor
+                    xyString = '[' + str(self.distData[i][2]) + ',0]'
+                    if i is not len(self.distData):
+                        xyString = xyString + ' '
+
+                elif self.distData[i][1] == 1: # if back sensor
+                    xyString = '[' + str(-1*self.distData[i][2]) + ',0]'
+                    if i is not len(self.distData):
+                        xyString = xyString + ' '
+
+                elif self.distData[i][1] == 2: # if left sensor
+                    xyString = '[0,' + str(self.distData[i][2]) + ']'
+                    if i is not len(self.distData):
+                        xyString = xyString + ' '
+
+                elif self.distData[i][1] == 3: # if right sensor
+                    xyString = '[0,' + str(-1*self.distData[i][2]) + ']'
+                    if i is not len(self.distData):
+                        xyString = xyString + ' '
+
+                self.distData.pop(i)
+                xyListString = xyListString + xyString
+
+        return xyList
+
+
 
 class MotorR(SourceMixin, CompositeDevice):
     """
     Extends :class:`CompositeDevice` and represents a generic motor
     connected to a bi-directional motor driver circuit (i.e. an `H-bridge`_).
 
-    Attach an `H-bridge`_ motor controller to your Pi; connect a power source
-    (e.g. a battery pack or the 5V pin) to the controller; connect the outputs
-    of the controller board to the two terminals of the motor; connect the
-    inputs of the controller board to two GPIO pins.
-
-    .. _H-bridge: https://en.wikipedia.org/wiki/H_bridge
-
-    The following code will make the motor turn "forwards"::
-
-        from gpiozero import Motor
-
-        motor = Motor(17, 18)
-        motor.forward()
-
-    :param int forward:
-        The GPIO pin that the forward input of the motor driver chip is
-        connected to.
-
-    :param int backward:
-        The GPIO pin that the backward input of the motor driver chip is
-        connected to.
-
-    :param bool pwm:
-        If ``True`` (the default), construct :class:`PWMOutputDevice`
-        instances for the motor controller pins, allowing both direction and
-        variable speed control. If ``False``, construct
-        :class:`DigitalOutputDevice` instances, allowing only direction
-        control.
-
-    :param Factory pin_factory:
-        See :doc:`api_pins` for more information (this is an advanced feature
-        which most users can ignore).
     """
     def __init__(self, pwmR = 18, forwardR=24, backwardR=23,pin_factory=None):
 
@@ -198,7 +283,7 @@ class MotorR(SourceMixin, CompositeDevice):
                 raise OutputDeviceBadValue(e)
         else:
             self.stop()
-    
+
     @property
     def is_active(self):
         """
@@ -250,38 +335,6 @@ class MotorL(SourceMixin, CompositeDevice):
     Extends :class:`CompositeDevice` and represents a generic motor
     connected to a bi-directional motor driver circuit (i.e. an `H-bridge`_).
 
-    Attach an `H-bridge`_ motor controller to your Pi; connect a power source
-    (e.g. a battery pack or the 5V pin) to the controller; connect the outputs
-    of the controller board to the two terminals of the motor; connect the
-    inputs of the controller board to two GPIO pins.
-
-    .. _H-bridge: https://en.wikipedia.org/wiki/H_bridge
-
-    The following code will make the motor turn "forwards"::
-
-        from gpiozero import Motor
-
-        motor = Motor(17, 18)
-        motor.forward()
-
-    :param int forward:
-        The GPIO pin that the forward input of the motor driver chip is
-        connected to.
-
-    :param int backward:
-        The GPIO pin that the backward input of the motor driver chip is
-        connected to.
-
-    :param bool pwm:
-        If ``True`` (the default), construct :class:`PWMOutputDevice`
-        instances for the motor controller pins, allowing both direction and
-        variable speed control. If ``False``, construct
-        :class:`DigitalOutputDevice` instances, allowing only direction
-        control.
-
-    :param Factory pin_factory:
-        See :doc:`api_pins` for more information (this is an advanced feature
-        which most users can ignore).
     """
     def __init__(self, pwmL = 19, forwardL=22, backwardL=27,pin_factory=None):
 
@@ -323,7 +376,7 @@ class MotorL(SourceMixin, CompositeDevice):
                 raise OutputDeviceBadValue(e)
         else:
             self.stop()
-    
+
     @property
     def is_active(self):
         """
@@ -370,4 +423,33 @@ class MotorL(SourceMixin, CompositeDevice):
         self.fwdL.off()
         self.pwmL.off()
 
-sockConn = SocketConnect(12000)
+
+def main(args):
+
+    sockConn = SocketConnect(12000) ## starts recv and send threads; recv thread passes cmds directly to executeCommand to control motor
+     self.sonarObj = Sonar()
+    while(1):
+        obstLocString = ''
+        self.sonarObj.enableSonar('front')
+        self.sonarObj.enableSonar('back')
+        self.sonarObj.enableSonar('left')
+        self.sonarObj.enableSonar('right')
+        self.sonarObj.startReading()
+        while sockConn.connected:
+            obstLocString = self.sonarObj.getObstacleLoc()
+            if len(obstLocString) is not 0:
+                self.sockConn.addToSendMessage(obstLocString, 1) # 1 for obst loc, 0 for marvin loc
+
+        self.sonarObj.stopReading()
+        self.sonarObj.disableSonar('front')
+        self.sonarObj.disableSonar('back')
+        self.sonarObj.disableSonar('left')
+        self.sonarObj.disableSonar('right')
+
+
+
+
+
+if __name__ == '__main__':
+    import sys
+    sys.exit(main(sys.argv))
