@@ -6,9 +6,11 @@ from pynput import keyboard
 
 class App(QWidget):
     def __init__(self, OtherWindow):
+    #def __init__(self):
         super().__init__()
         print("ths one is on github")
-        self.setGeometry(100,100,800,600)
+        self.setGeometry(100,100,440,800)
+
         #Assuming the world is 2m(width) by 1m(height)
 
 
@@ -16,10 +18,11 @@ class App(QWidget):
         self.currentState = 0
 
         #self.directionCode =0
+        self.flag = 0
 
         self.obstCounter = 0
-        self.x = 200
-        self.y = 200
+        self.x = 20
+        self.y = 710
         self.d = []
 
         #loading image for tank
@@ -30,20 +33,30 @@ class App(QWidget):
         #self.tank.adjustSize()
 
         self.image= QtGui.QImage('smallcar.png')
+        self.rectImage = QtGui.QImage('rectOutline.png')
 
         self.pixmap = QtGui.QPixmap(self.image)
+        self.pixmap_rect = QtGui.QPixmap(self.rectImage)
 
         self.tank = QtWidgets.QLabel(self)
         self.tank.setAlignment(QtCore.Qt.AlignCenter)
         self.tank.setPixmap(self.pixmap)
         self.tank.adjustSize()
         self.tank.move(self.x, self.y)
-        self.showObstacle(205, 305)
 
+        self.boarder = QtWidgets.QLabel(self)
+        self.boarder.setAlignment(QtCore.Qt.AlignCenter)
+        self.boarder.setPixmap(self.pixmap_rect)
+        self.boarder.adjustSize()
+
+        self.showObstacle(205, 305)
+        self.showObstacle(210,315)
+        #self.showObstacle(20, 540)
 
 
         self.show()
 
+    """
     def keyPressEvent(self, e):
         def isPrintable(key):
             printable = [
@@ -82,6 +95,7 @@ class App(QWidget):
 
             self.changeHeading(3)
             self.moveCar(-10,0)
+    """
 
 
     def moveCar(self, new_x, new_y):
@@ -89,17 +103,37 @@ class App(QWidget):
         self.y += new_y
         self.tank.move(self.x, self.y)
 
+    def showTankPos(self):
+        return [self.x, self.y]
+
+    def detect(self, new_x, new_y, isDetected):
+        print("detected function working")
+        if isDetected == True:
+            self.moveCar(new_x, new_y)
+
+        else:
+            print("detected function not working")
+
     def showObstacle(self, Obs_x, Obs_y):
+
+        self.obstImage = QtGui.QImage('obsta_edited.png')
+        self.pixmap_obst = QtGui.QPixmap(self.obstImage)
+        self.d.append("O{0}".format(self.obstCounter))
+
+
+        label = QtWidgets.QLabel(self)
+        label.setPixmap(self.pixmap_obst)
+        label.move(Obs_x, Obs_y)
+        label.adjustSize()
+        label.show()  # <---show QLabel
+
+        self.d[self.obstCounter] = label
         self.obstCounter += 1
-
-        self.d.append(["O{0}".format(self.obstCounter), Obs_x, Obs_y])
-        self.d[0][0] =QtWidgets.QLabel(self)
-        self.d[0][0].setPixmap(QtGui.QPixmap("obsta_edited.png"))
-        self.d[0][0].move(Obs_x, Obs_y)
-        self.d[0][0].adjustSize()
+        print(self.d)
+        #print("Obstacle Run")
 
 
-        print("Obstacle Run")
+    """
 
     def changeHeading(self, directionCode):
         #direction data from IMU
@@ -123,7 +157,22 @@ class App(QWidget):
             self.pixmap = self.pixmap.transformed(transform)
             self.tank.setPixmap(self.pixmap)
         self.currentState = directionCode
+    """
+
+    def rotate(self, angle):
+        transform = QtGui.QTransform().rotate(angle)
+        self.pixmap = self.pixmap.transformed(transform)
+        self.tank.setPixmap(self.pixmap)
+
 
     def printStatement(self, message):
         print("this is from print Statement in GUI")
         print(message)
+
+"""
+if __name__ == '__main__':
+    app = QApplication(sys.argv)
+    ex = App()
+
+    sys.exit(app.exec_())
+"""
