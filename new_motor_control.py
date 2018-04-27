@@ -172,7 +172,7 @@ class SocketConnect():
             sockConn.addToSendMessage(obstLocString, 1)
             sockConn.addToSendMessage(xyMarvString, 0)
 
-            sockConn
+            sockConn.addToSendMessage(str(heading), 2)
 
 
 class Sonar():
