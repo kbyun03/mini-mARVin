@@ -73,10 +73,12 @@ class SocketConnect():
             elif (not self.connected) and (self.openConnection):
                 self.closeConn()
                 self.openConnection = False
+                self.mutex.release()
             if self.quit:
                 if self.openConnection or self.connected:
                     self.closeConn()
                     self.openConnection = False
+                self.mutex.release()
                 break
 
 
@@ -120,7 +122,7 @@ class SocketConnect():
 
     def closeConn(self):
         try:
-            #self.tSend.join()
+            self.tSend.join()
             self.tRecv.join()
             self.conn.close()
         except:
@@ -204,33 +206,99 @@ class Sonar():
     def getObstacleLoc(self, heading):
         '''
         Gives obstacle locations as x,y displacements from vechicle
-        ex: if the front sensor reads an object that is 20cm away and the
-            left sensor reads an object that is 30 cm away, then '[20,0] [0,30]' is
-            returned
+        ex: if the heading is 0 degree and th front sensor reads an object that is 20cm away and the left sensor reads an object that is 30 cm away, then '[20,0] [0,30]' is
+        returned
         '''
         xyListString = ''
         if len(self.distData) != 0:
             for i in len(self.distData):
                 if self.distData[i][1] == 0: # if front sensor
-                    xyString = '[' + str(self.distData[i][2]) + ',0]'
-                    if i is not len(self.distData):
-                        xyString = xyString + ' '
+                    d = self.distData[i][2]
+                    if (0 < heading ) and (heading < 90):
+                        theta = heading
+                        x = d * cos(theta)
+                        y = d * sin(theta)
+                    elif (90 < heading) and (heading < 180):
+                        theta = 180 - heading
+                        x = -1 * d * cos(theta)
+                        y = d * sin(theta)
 
-                elif self.distData[i][1] == 1: # if back sensor
-                    xyString = '[' + str(-1*self.distData[i][2]) + ',0]'
-                    if i is not len(self.distData):
-                        xyString = xyString + ' '
+                    elif (-180 < heading) and (heading < -90):
+                        theta = heading + 180
+                        x = -1 * d * cos(theta)
+                        y = -1 * d * sin(theta)
 
-                elif self.distData[i][1] == 2: # if left sensor
-                    xyString = '[0,' + str(self.distData[i][2]) + ']'
-                    if i is not len(self.distData):
-                        xyString = xyString + ' '
+                    elif (-90 < heading ) and (heading < 0):
+                        theta = abs(heading)
+                        x = d * cos(theta)
+                        y = -1 * d * sin(theta)
+
+                elif self.distData[i][1] == 1: # if back sensor, ~ 6' from lidar
+                    d = self.distData[i][2] + (6 * 2.54)
+                    if (0 < heading) and (heading < 90):
+                        theta = heading
+                        x = - 1 * d * cos(theta)
+                        y = - 1 * d * sin(theta)
+                    elif (90 < heading) and (heading < 180):
+                        theta = 180 - heading
+                        x = d * cos(theta)
+                        y = - 1 * d * sin(theta)
+
+                    elif (-180 < heading) and (heading < -90):
+                        theta = heading + 180
+                        x = d * cos(theta)
+                        y = d * sin(theta)
+
+                    elif (-90 < heading) and (heading < 0):
+                        theta = abs(heading)
+                        x = -1 * d * cos(theta)
+                        y = d * sin(theta)
+
+                elif self.distData[i][1] == 2: # if left sensor, ~
+                    if (0 < heading ) and (heading < 90):
+                        theta = 90 - heading
+                        x = -1 * d * cos(theta)
+                        y = d * sin(theta)
+
+                    elif (90 < heading) and (heading < 180):
+                        theta = 90 - (180 - heading)
+                        x = - 1 * d * cos(theta)
+                        y = - 1 * d * sin(theta)
+
+                    elif (-180 < heading) and (heading < -90):
+                        theta = 90 - (heading + 180)
+                        x =  d * cos(theta)
+                        y = -1 * d * sin(theta)
+
+                    elif (-90 < heading ) and (heading < 0):
+                        theta = 90 - abs(heading)
+                        x = d * cos(theta)
+                        y = d * sin(theta)
 
                 elif self.distData[i][1] == 3: # if right sensor
-                    xyString = '[0,' + str(-1*self.distData[i][2]) + ']'
-                    if i is not len(self.distData):
-                        xyString = xyString + ' '
+                    if (0 < heading ) and (heading < 90):
+                        theta = 90 - heading
+                        x = d * cos(theta)
+                        y = -1 * d * sin(theta)
 
+                    elif (90 < heading) and (heading < 180):
+                        theta = 90 - (180 - heading)
+                        x = d * cos(theta)
+                        y = d * sin(theta)
+
+                    elif (-180 < heading) and (heading < -90):
+                        theta = 90 - (heading + 180)
+                        x = -1 * d * cos(theta)
+                        y =  d * sin(theta)
+
+                    elif (-90 < heading ) and (heading < 0):
+                        theta = 90 - abs(heading)
+                        x = -1 * d * cos(theta)
+                        y =  -1 * d * sin(theta)
+
+                xyString = '[' + str(x) + ',' + str(y) + ']'
+                if i is not len(self.distData):
+                    xyString = xyString + ' '
                 self.distData.pop(i)
                 xyListString = xyListString + xyString
 
