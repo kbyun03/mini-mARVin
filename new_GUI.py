@@ -44,6 +44,7 @@ class App(QWidget):
         self.tank.adjustSize()
         self.tank.move(self.x, self.y)
 
+
         self.boarder = QtWidgets.QLabel(self)
         self.boarder.setAlignment(QtCore.Qt.AlignCenter)
         self.boarder.setPixmap(self.pixmap_rect)
@@ -53,7 +54,7 @@ class App(QWidget):
         self.showObstacle(210,315)
         #self.showObstacle(20, 540)
 
-
+        self.showObstacle(115,15)
         self.show()
 
     """
@@ -113,6 +114,8 @@ class App(QWidget):
 
         else:
             print("detected function not working")
+
+
 
     def showObstacle(self, Obs_x, Obs_y):
 

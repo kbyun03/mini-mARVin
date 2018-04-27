@@ -81,9 +81,6 @@ class MiniMarvin(QWidget):
         self.stacked_layout.addWidget(self.myGui)
 
 
-
-
-
     def displayError(self, socketError):
         self.connected = False
         if socketError == QAbstractSocket.RemoteHostClosedError:
@@ -112,7 +109,6 @@ class MiniMarvin(QWidget):
             self.statusLabel.setText("Connected")
             self.connectButton.setText("Disconnect")
             self.connected = True;
-
             self.openWindow()
 
             self.lis.start()
@@ -134,18 +130,21 @@ class MiniMarvin(QWidget):
             message = ''
             if key.char == 'w':
                 message = "F"
+                self.myGui.moveCar(0,-10)
             elif key.char == 's':
                 message = "B"
+                self.myGui.moveCar(0, 10)
             elif key.char == 'd':
                 message = "R"
+                self.myGui.moveCar(10, 0)
             elif key.char == 'a':
                 message = "L"
+                self.myGui.moveCar(-10, 0)
             elif key.char == 'q':
                 message = "S"
             print("sending: " + message)
-            # now use the QDataStream and write the byte array to it.
-            # now send the QByteArray.
-            #self.myGui.getPos(message)
+
+
             self.tcpSocket.sendall(message.encode())
             
         except socket.error as msg:
