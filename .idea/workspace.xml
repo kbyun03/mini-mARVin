@@ -18,8 +18,8 @@
           <file leaf-file-name="tcp_comp_gui.py" pinned="false" current-in-tab="true">
             <entry file="file://$PROJECT_DIR$/tcp_comp_gui.py">
               <provider selected="true" editor-type-id="text-editor">
-                <state relative-caret-position="416">
-                  <caret line="113" column="54" lean-forward="true" selection-start-line="113" selection-start-column="54" selection-end-line="113" selection-end-column="54" />
+                <state relative-caret-position="352">
+                  <caret line="109" column="0" lean-forward="true" selection-start-line="109" selection-start-column="0" selection-end-line="109" selection-end-column="0" />
                   <folding>
                     <element signature="e#173#196#0" expanded="true" />
                   </folding>
@@ -34,8 +34,8 @@
           <file leaf-file-name="new_GUI.py" pinned="false" current-in-tab="true">
             <entry file="file://$PROJECT_DIR$/new_GUI.py">
               <provider selected="true" editor-type-id="text-editor">
-                <state relative-caret-position="271">
-                  <caret line="60" column="38" lean-forward="false" selection-start-line="60" selection-start-column="38" selection-end-line="60" selection-end-column="38" />
+                <state relative-caret-position="464">
+                  <caret line="90" column="30" lean-forward="false" selection-start-line="90" selection-start-column="30" selection-end-line="90" selection-end-column="30" />
                   <folding>
                     <element signature="e#0#10#0" expanded="true" />
                   </folding>
@@ -690,8 +690,8 @@
     </entry>
     <entry file="file://$PROJECT_DIR$/tcp_comp_gui.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="416">
-          <caret line="113" column="54" lean-forward="true" selection-start-line="113" selection-start-column="54" selection-end-line="113" selection-end-column="54" />
+        <state relative-caret-position="352">
+          <caret line="109" column="0" lean-forward="true" selection-start-line="109" selection-start-column="0" selection-end-line="109" selection-end-column="0" />
           <folding>
             <element signature="e#173#196#0" expanded="true" />
           </folding>
@@ -700,8 +700,8 @@
     </entry>
     <entry file="file://$PROJECT_DIR$/new_GUI.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="271">
-          <caret line="60" column="38" lean-forward="false" selection-start-line="60" selection-start-column="38" selection-end-line="60" selection-end-column="38" />
+        <state relative-caret-position="464">
+          <caret line="90" column="30" lean-forward="false" selection-start-line="90" selection-start-column="30" selection-end-line="90" selection-end-column="30" />
           <folding>
             <element signature="e#0#10#0" expanded="true" />
           </folding>
