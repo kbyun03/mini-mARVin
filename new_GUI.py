@@ -9,7 +9,10 @@ class App(QWidget):
         super().__init__()
         print("ths one is on github!")
         self.setGeometry(100,100,800,600)
-        #Assuming the world is 2m(width) by 1m(height)
+        #the world is 143cm (height) by  77cm (width)
+        self.pixbycm_height = (800/ 143)
+        self.pixbycm_width = 600/77
+
 
         self.setWindowTitle("New GUI Interface Window")
         self.currentState = 0
@@ -145,6 +148,7 @@ class App(QWidget):
         else:
             print("detected function not working")
 
+    #Need to change the heading function, since we are going to need IMU's angle data
     def changeHeading(self, directionCode):
         print("current state : " + str(self.currentState) + " directionCode : " + str(directionCode))
         if self.currentState == directionCode:
