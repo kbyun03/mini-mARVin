@@ -11,7 +11,10 @@ class App(QWidget):
         print("ths one is on github")
         self.setGeometry(100,100,440,800)
 
-        #Assuming the world is 2m(width) by 1m(height)
+        #Assuming the world is 147m(height) by 77m(height)
+
+        self.pixbycm_height = 800/147
+        self.pixbycm_width = 440/77
 
 
         self.setWindowTitle("New GUI Interface Window")
@@ -106,7 +109,7 @@ class App(QWidget):
         print(self.showTankPos())
         if self.showTankPos() == [20, 590]:
             print("show Obstacle is called")
-            self.showObstacle(20,550)
+            self.showObstacle(20,round(-15 * self.pixbycm_height,2) + 590)
         elif self.showTankPos() == [60, 590]:
             print("show obstacle is called again")
             self.showObstacle(90,590)
@@ -130,7 +133,7 @@ class App(QWidget):
         self.obstImage = QtGui.QImage('obsta_edited.png')
         self.pixmap_obst = QtGui.QPixmap(self.obstImage)
 
-        for i in range(0,10):
+        for i in range(0,80):
             self.d.append(["O{0}".format(i), []])
             label = QtWidgets.QLabel(self)
             label.setPixmap(self.pixmap_obst)
@@ -138,12 +141,32 @@ class App(QWidget):
             label.adjustSize()
             self.d[i][0] = label
 
+        """
+        self.d.append(["O{0}".format(self.obstCounter), []])
+        label = QtWidgets.QLabel(self)
+        label.setPixmap(self.pixmap_obst)
+        label.move(9999, 9999)
+        label.adjustSize()
+        label.show()
+        self.d[self.obstCounter][0] = label
+        """
+
         print(self.d)
 
 
     def showObstacle(self,x ,y):
+        print("test if there is already another obstacle")
+        print([x,y])
+        print(self.d[self.obstCounter][1])
+        if self.obstCounter != 0:
+            for i in range(0,self.obstCounter):
+                if [x,y] == self.d[i][1]:
+                    print("The Obstacle is already there")
+                    return
 
-        self.d[self.obstCounter][0].move(x,y)
+
+        print("The Obstacle is not there")
+        self.d[self.obstCounter][0].move(x, y)
         self.d[self.obstCounter][1].append(x)
         self.d[self.obstCounter][1].append(y)
         print(self.d)
@@ -151,6 +174,9 @@ class App(QWidget):
         self.d[self.obstCounter][0].show()
         print(self.obstCounter)
         self.obstCounter += 1
+
+
+
 
 
     """
