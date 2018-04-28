@@ -11,6 +11,11 @@ from imuHeading import ImuPosHeading
 
 VERBOSE = True
 
+global initialHeading
+global sockConn
+global imuObj
+global servoPWM
+
 def debug(text):
     if VERBOSE:
         print( "Debug:---", text)
@@ -34,7 +39,7 @@ class SocketConnect():
         self.quit = False
         self.sendMessage = ''
         self.socket.listen(10)
-        self.messageType = {0:'MARV', 1:'OBST'}
+        self.messageType = {0:'MARV', 1:'OBST', 2:'HEAD'}
         debug('listening...')
         self.tConn = Thread(name = 'conn', target = self.checkConnection)
         self.tSend = threading.Thread(name = 'send', target = self.socketSender)
@@ -45,7 +50,7 @@ class SocketConnect():
     def addToSendMessage(self, msg, type):
         '''
             msg is data as a string of x,y coord
-            type is either 0 for marvin loc or 1 for obstacle loc
+            type is either 0 for marvin loc or 1 for obstacle loc; 2 is heading
 
             message types will be delineated by ';', data values (such as diff obstacle locations)
             will be delineated by ' '
@@ -152,8 +157,23 @@ class SocketConnect():
             self.motorL.backward(0.5)
             self.motorR.forward(0.5)
         elif cmd == 'S':
+
             self.motorL.stop()
             self.motorR.stop()
+
+
+        	heading = imuObj.readIMU(initialHeading)
+        	print ("Heading %5.2f" % (heading))
+        	xyMarv = sonarObj.collectAngleVectors(heading)
+            xyMarvString = '[' + xyMarv[1] + ',' + xyMarv[2] + ']'
+            print ("Marvin " + xyMarvString)
+            obstLocString = sonarObj.getObstacleLoc(heading)
+            print ("Obstacal Location " + obstLocString)
+            sockConn.addToSendMessage(obstLocString, 1)
+            sockConn.addToSendMessage(xyMarvString, 0)
+
+            sockConn.addToSendMessage(str(heading), 2)
+
 
 class Sonar():
     def __init__(self):
@@ -172,7 +192,7 @@ class Sonar():
         self.obstacleLoc = [] # this list will hold obstacle locations as X,Y coordinates
 
         self.killThread = False # this will be set
-        self.tRead = Thread(target = readSonar, name = 'read')
+        #self.tRead = Thread(target = readSonar, name = 'read')
 
     def enableSonar(self, sonarName):
         '''sonarName should be given as a string: 'front' '''
@@ -196,7 +216,7 @@ class Sonar():
 
     def readSonar(self): # this is a thread
         ''' adds distance read to distance list; dist is in m '''
-        while(1):
+        #while(1):
             for i in self.currSonarInd:
                 self.distData.append([self.sonarSensors[i], self.currSonars[i].distance()])
 
@@ -255,44 +275,65 @@ class Sonar():
                         y = d * sin(theta)
 
                 elif self.distData[i][1] == 2: # if left sensor, ~
+                    d = self.distData[i][2]
                     if (0 < heading ) and (heading < 90):
                         theta = 90 - heading
+                        dx = - 6 * cos(theta)
+                        dy = - 6 * sin(theta)
                         x = -1 * d * cos(theta)
                         y = d * sin(theta)
 
                     elif (90 < heading) and (heading < 180):
                         theta = 90 - (180 - heading)
+                        dx = cos(theta) * 6
+                        dy = - sin(theta) * 6
                         x = - 1 * d * cos(theta)
                         y = - 1 * d * sin(theta)
 
                     elif (-180 < heading) and (heading < -90):
                         theta = 90 - (heading + 180)
+                        dx = cos(theta) * 6
+                        dy = sin(theta) * 6
                         x =  d * cos(theta)
                         y = -1 * d * sin(theta)
 
                     elif (-90 < heading ) and (heading < 0):
                         theta = 90 - abs(heading)
+                        dx = - cos(theta) * 6
+                        dy = sin(theta) * 6
                         x = d * cos(theta)
                         y = d * sin(theta)
 
+                    x = x + dx
+                    y = y + dy
+
                 elif self.distData[i][1] == 3: # if right sensor
+                    d = self.distData[i][2]
                     if (0 < heading ) and (heading < 90):
                         theta = 90 - heading
+                        dx = - cos(theta) * 6
+                        dy = - sin(theta) * 6
                         x = d * cos(theta)
                         y = -1 * d * sin(theta)
 
                     elif (90 < heading) and (heading < 180):
                         theta = 90 - (180 - heading)
+                        dx = cos(theta) * 6
+                        dy = - sin(theta) * 6
                         x = d * cos(theta)
                         y = d * sin(theta)
 
                     elif (-180 < heading) and (heading < -90):
                         theta = 90 - (heading + 180)
+                        dx = cos(theta) * 6
+                        dy = sin(theta) * 6
                         x = -1 * d * cos(theta)
                         y =  d * sin(theta)
 
                     elif (-90 < heading ) and (heading < 0):
                         theta = 90 - abs(heading)
+                        dx = - cos(theta) * 6
+                        dy = sin(theta) * 6
                         x = -1 * d * cos(theta)
                         y =  -1 * d * sin(theta)
 
@@ -303,6 +344,138 @@ class Sonar():
                 xyListString = xyListString + xyString
 
         return xyList
+
+    # oops this is for lidar
+    def adjustAngle(self,angle):
+    	DutyCycle  = 1.0/18*(angle)+2.2;
+    	return DutyCycle
+
+    # also for lidar.. obviously
+    def readLiDAR(self):
+
+    	ser = serial.Serial('/dev/ttyUSB0',115200,timeout = 1)
+
+    	#ser.write(0x42)
+    	ser.write(bytes(b'B'))
+
+    	#ser.write(0x57)
+    	ser.write(bytes(b'W'))
+
+    	#ser.write(0x02)
+    	ser.write(bytes(2))
+
+    	#ser.write(0x00)
+    	ser.write(bytes(0))
+
+    	#ser.write(0x00)
+    	ser.write(bytes(0))
+
+    	#ser.write(0x00)
+    	ser.write(bytes(0))
+
+    	#ser.write(0x01)
+    	ser.write(bytes(1))
+
+    	#ser.write(0x06)
+    	ser.write(bytes(6))
+
+    	Dist_Total = 0;
+    	counter = 0;
+
+    	while(True):
+    		while(ser.in_waiting >= 9):
+    			if((b'Y' == ser.read()) and ( b'Y' == ser.read())):
+
+    				Dist_L = ser.read()
+    				Dist_H = ser.read()
+    				Dist_Total = (ord(Dist_H) * 256) + (ord(Dist_L))
+    				for i in range (0,5):
+    					ser.read()
+    				if(counter==20):
+    					return Dist_Total
+    				counter = counter+1
+
+    def collectAngleVectors(self,heading):
+    	y = 0
+    	x = 0
+    	maxY = 143
+    	maxX = 77
+    	coordinates = []
+    	if heading <=0 and heading > -45:
+    		#Collect Data from Walls 4 and 1
+    		pwm.value = adjustAngle(90+heading)/100
+    		time.sleep(.5)
+    		x = maxX- self.readLiDAR()
+    		pwm.value = adjustAngle(180+heading)/100
+    		time.sleep(.5)
+    		y = self.readLiDAR()
+
+    	if heading <= -45 and heading > -90:
+    		#Collect Data from Walls 4 and 1
+    		pwm.value = adjustAngle(90+heading)/100
+    		time.sleep(.5)
+    		x = maxX- self.readLiDAR()
+    		pwm.value = (adjustAngle(180+heading))/100
+    		time.sleep(.5)
+    		y = self.readLiDAR()
+
+    	if heading <=-90 and heading >-135:
+    		#Collect Data from Walls 2 and 1
+    		pwm.value = adjustAngle(180+heading+90)/100
+    		time.sleep(.5)
+    		x = self.readLiDAR()
+    		pwm.value = adjustAngle(90+heading+90)/100
+    		time.sleep(.5)
+    		y = self.readLiDAR()
+
+    	if heading <= -135:
+    		#Collect Data from Walls 2 and 1
+    		pwm.value = adjustAngle(180+heading+90)/100
+    		time.sleep(.5)
+    		x = self.readLiDAR()
+    		pwm.value = adjustAngle(90+heading+90)/100
+    		time.sleep(.5)
+    		y = self.readLiDAR()
+
+    	if heading > 0 and heading <= 45:
+    		#Collect Data from Walls 4 and 3
+    		pwm.value = adjustAngle(180-heading)/100
+    		time.sleep(.5)
+    		x = maxX- self.readLiDAR()
+    		pwm.value = adjustAngle(90-heading)/100
+    		time.sleep(.5)
+    		y = maxY- self.readLiDAR()
+
+    	if heading > 45 and heading <= 90:
+    		#Collect Data from Walls 4 and 3
+    		pwm.value = adjustAngle(180-heading)/100
+    		time.sleep(.5)
+    		x = maxX- self.readLiDAR()
+    		pwm.value = adjustAngle(90-heading)/100
+    		time.sleep(.5)
+    		y = maxY- self.readLiDAR()
+
+    	if heading > 90 and heading <= 135:
+    		#Collect Data from Walls 2 and 3
+    		pwm.value = adjustAngle(180-heading+90)/100
+    		time.sleep(.5)
+    		x = self.readLiDAR()
+    		pwm.value = adjustAngle(90-heading+90)/100
+    		time.sleep(.5)
+    		y = maxY-self.readLiDAR()
+
+    	if heading > 135:
+    		#Collect Data from Walls 2 and 3
+    		pwm.value = adjustAngle(180-heading+90)/100
+    		time.sleep(.5)
+    		x = self.readLiDAR()
+    		pwm.value = adjustAngle(90-heading+90)/100
+    		time.sleep(.5)
+    		y = maxY- self.readLiDAR()
+
+    	coordinates.append(x)
+    	coordinates.append(y)
+    	return coordinates
 
 
 
@@ -498,24 +671,34 @@ def main(args):
     sockConn = SocketConnect(12000) ## starts recv and send threads; recv thread passes cmds directly to executeCommand to control motor
     sonarObj = Sonar()
     imuObj = ImuPosHeading()
-    while(1):
-        obstLocString = ''
-        sonarObj.enableSonar('front')
-        sonarObj.enableSonar('back')
-        sonarObj.enableSonar('left')
-        sonarObj.enableSonar('right')
-        sonarObj.startReading()
-        while sockConn.connected:
-            heading = imuObj.readIMU()
-            obstLocString = sonarObj.getObstacleLoc(heading)
-            if len(obstLocString) is not 0:
-                sockConn.addToSendMessage(obstLocString, 1) # 1 for obst loc, 0 for marvin loc
+    initialHeading = readIMU(0)
 
-        sonarObj.stopReading()
+    #while(1):
+    #    obstLocString = ''
+    sonarObj.enableSonar('front')
+    sonarObj.enableSonar('back')
+    sonarObj.enableSonar('left')
+    sonarObj.enableSonar('right')
+
+    #    if sockConn.connected:
+            #sonarObj.startReading()
+
+   '''
+            while sockConn.connected:
+                heading = imuObj.readIMU(initialHeading)
+
+                obstLocString = sonarObj.getObstacleLoc(heading)
+                if len(obstLocString) is not 0:
+                    sockConn.addToSendMessage(obstLocString, 1) # 1 for obst loc, 0 for marvin loc
+
+            #sonarObj.stopReading()
+
         sonarObj.disableSonar('front')
         sonarObj.disableSonar('back')
         sonarObj.disableSonar('left')
         sonarObj.disableSonar('right')
+
+    '''
 
 
 
