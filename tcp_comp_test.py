@@ -1,53 +1,27 @@
-# DataClient1.py
+import socket
+import math
+import sys
 
-from threading import Thread
-import socket, time
-
-VERBOSE = True
-IP_ADDRESS = "143.215.102.135"
-IP_PORT = 12000
-
-def debug(text):
-    if VERBOSE:
-        print ("Debug:---", text)
-
-def sendCommand(cmd):
-    debug("sendCommand() with cmd = " + cmd)
+TCP_PORT = 12001
+BUFFER_SIZE = 4096  # Normally 1024, but we want fast response
+try:
+    serversocket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+except socket.error:
+    raise Exception("Failed to create socket")
+try:
+    hostname = socket.gethostname()
+except socket.gaierror:
+    raise Exception("Failed to get host name")
+try:
+    serversocket.bind((hostname, TCP_PORT))
+    print("binding on hostname: " + hostname + "and TCP_PORT: " + TCP_PORT)
+except socket.error:
+    raise Exception("Failed to bind socket")
+serversocket.listen(5)
+while 1:
+    conn, addr = serversocket.accept()
     try:
-        # append \0 as end-of-message indicator
-        eol = "\0"
-        sock.sendall(cmd.encode())
-    except socket.error as msg:
-        debug("Exception in sendCommand()" + msg[:])
-        closeConnection()
-
-def closeConnection():
-    global isConnected
-    debug("Closing socket")
-    sock.close()
-    isConnected = False
-
-def connect():
-    global sock
-    sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-    debug("Connecting...")
-    try:
-        sock.connect((IP_ADDRESS, IP_PORT))
+        data = conn.recv(BUFFER_SIZE)
+        print(data)
     except:
-        debug("Connection failed.")
-        return False
-    return True
-
-sock = None
-isConnected = False
-
-if connect():
-    isConnected = True
-    print ("Connection established")
-    time.sleep(1)
-    while isConnected:
-        cmd = input("Enter a command: ")
-        sendCommand(cmd)
-else:
-    print ("Connection to %s:%d failed" % (IP_ADDRESS, IP_PORT))
-print ("done")
+        raise Exception("Unable to receive data from Client")

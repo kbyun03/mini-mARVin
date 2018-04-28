@@ -44,21 +44,18 @@ class MiniMarvin(QWidget):
         self.statusLabel = QLabel("Not Connected")
 
         
-        self.hbox = QHBoxLayout(self)
-        self.hbox.addWidget(self.ipAddrL)
-        self.hbox.addWidget(self.ipAddr)
-        self.hbox.addWidget(self.connectButton)
-
         self.vbox = QVBoxLayout(self)
-        self.vbox.addStretch(1)
-        self.vbox.addLayout(self.hbox)
+        self.vbox.addWidget(self.ipAddrL)
+        self.vbox.addWidget(self.ipAddr)
+        self.vbox.addWidget(self.connectButton)
+        self.vbox.addWidget(self.statusLabel)
+
         self.setLayout(self.vbox)
 
         self.connected = False
 
 
         self.keylist = []
-        self.lis = keyboard.Listener(on_press=self.on_press)
         
         
         self.resize(500,400)
@@ -66,6 +63,9 @@ class MiniMarvin(QWidget):
 
 
         self.setWindowTitle('mini-mARVin')
+        self.openConnection = False
+
+        self.tRecv = Thread(target = self.recieveThread())
 
         self.show()
         self.mutex = Lock()
@@ -95,9 +95,50 @@ class MiniMarvin(QWidget):
         size = self.geometry()
         self.move((screen.width()-size.width())/2, 
             (screen.height()-size.height())/2)
-        
+
+    def recieveThread(self):
+        while(1):
+            msg = ''
+            if self.connected:
+                try:
+                    print("trying to recieve thread")
+                    msg = self.tcpSocket.recv(4096)
+                    print(msg)
+                    #Assuming format is following
+                    #msg = 'MARV [12,20] ; OBST [20,30] [30,40] ; HEAD 90'
+
+                    seg = msg.split(' ')
+
+                    for i in range(0,len(seg)):
+                        if seg[i] == 'MARV':
+                            curPos= seg[i+1]
+                            self.myGui.moveCar(curPos)
+                        elif seg[i] == 'HEAD':
+                            angle = seg[i+1]
+                            self.myGui.rotate(angle)
+                        elif seg[i] == 'OBST':
+                            j = i
+                            while seg[j] != ';':
+                                j = j +1
+                                ObstPos = seg[j]
+                                self.myGui.showObstacle(ObstPos)
+                    break
+
+
+
+                except socket.error as eMsg:
+                    print('exception in tcpSocket.recv(): ' + str(eMsg))
+                    self.tcpSocket.close()
+                    self.statusLabel.setText("Not Connected")
+                    self.connectButton.setText("Connect")
+                    self.connected = False
+                    self.lis.stop()
+                    break
+            else:
+                break
+
     def socketConnect(self):
-        if self.connected == False:
+        if (self.connected == False):
             self.blockSize = 0
             self.tcpSocket =  socket.socket(socket.AF_INET, socket.SOCK_STREAM)
             try:
@@ -106,17 +147,21 @@ class MiniMarvin(QWidget):
                 print("Connection failed.")
             self.statusLabel.setText("Connected")
             self.connectButton.setText("Disconnect")
-            self.connected = True;
-
+            self.connected = True
+            self.openConnection = True
             self.openWindow()
-
+            self.lis = keyboard.Listener(on_press=self.on_press)
             self.lis.start()
-        else:
+            self.tRecv.start()
+            #hi
+        elif (self.connected == True):
             self.tcpSocket.close()
             self.statusLabel.setText("Not Connected")
             self.connectButton.setText("Connect")
-            self.connected = False;
+            self.connected = False
             self.lis.stop()
+            self.tRecv.join()
+
 
         
     def on_press(self, key):
@@ -140,7 +185,11 @@ class MiniMarvin(QWidget):
         except socket.error as msg:
             print ("excepton in sending data: " + str(msg))
             self.tcpSocket.close()
-            self.connected = false
+            self.statusLabel.setText("Not Connected")
+            self.connectButton.setText("Connect")
+            self.connected = False
+            self.lis.stop()
+            self.tRecv.join()
         
         if key == keyboard.Key.esc: return False #stop listener
 
