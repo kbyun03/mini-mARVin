@@ -101,6 +101,7 @@ class MiniMarvin(QWidget):
             msg = ''
             if self.connected:
                 try:
+                    print("trying to recieve thread")
                     msg = self.tcpSocket.recv(4096)
                     print(msg)
                     #Assuming format is following
