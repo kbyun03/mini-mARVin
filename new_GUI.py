@@ -56,10 +56,10 @@ class App(QWidget):
         #for testing show obstacle method /// comment it out later
         if self.showTankPos() == [20, 590]:
             print("show Obstacle is called")
-            self.showObstacle(20,round(-15 * self.pixbycm_height,2) + 590)
+            self.showObstacle([20,round(-15 * self.pixbycm_height,2) + 590])
         elif self.showTankPos() == [60, 590]:
             print("show obstacle is called again")
-            self.showObstacle(90,590)
+            self.showObstacle([90,590])
 
     def showTankPos(self):
         return [self.x, self.y]
