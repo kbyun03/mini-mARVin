@@ -7,7 +7,7 @@ from pynput import keyboard
 class App(QWidget):
     def __init__(self, OtherWindow):
         super().__init__()
-        print("ths one is on github")
+        print("ths one is on github!")
         self.setGeometry(100,100,800,600)
         #Assuming the world is 2m(width) by 1m(height)
 
