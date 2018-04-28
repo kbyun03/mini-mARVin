@@ -5,8 +5,8 @@ from PyQt5.QtCore import Qt
 from pynput import keyboard
 
 class App(QWidget):
-    #def __init__(self, OtherWindow):
-    def __init__(self):
+    def __init__(self, OtherWindow):
+    #def __init__(self):
         super().__init__()
         print("ths one is on github!!")
         self.setGeometry(100,100,440,800)
@@ -36,7 +36,7 @@ class App(QWidget):
         self.tank.setPixmap(self.pixmap)
         self.tank.adjustSize()
         self.tank.move(self.x, self.y)
-        
+
         self.boarder = QtWidgets.QLabel(self)
         self.boarder.setAlignment(QtCore.Qt.AlignCenter)
         self.boarder.setPixmap(self.pixmap_rect)
@@ -56,10 +56,10 @@ class App(QWidget):
         #for testing show obstacle method /// comment it out later
         if self.showTankPos() == [20, 590]:
             print("show Obstacle is called")
-            self.showObstacle(20,round(-15 * self.pixbycm_height,2) + 590)
+            self.showObstacle([20,round(-15 * self.pixbycm_height,2) + 590])
         elif self.showTankPos() == [60, 590]:
             print("show obstacle is called again")
-            self.showObstacle(90,590)
+            self.showObstacle([90,590])
 
     def showTankPos(self):
         return [self.x, self.y]
@@ -84,8 +84,11 @@ class App(QWidget):
         #print(self.d)
 
 
-    def showObstacle(self,x ,y):
+    def showObstacle(self,ObstPos):
         print("test if there is already another obstacle")
+        [tankx, tanky] = self.showTankPos()
+        x = ObstPos[0] + tankx
+        y = ObstPos[1] + tanky
         print([x,y])
         print(self.d[self.obstCounter][1])
         if self.obstCounter != 0:
