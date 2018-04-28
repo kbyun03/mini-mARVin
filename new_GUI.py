@@ -5,8 +5,8 @@ from PyQt5.QtCore import Qt
 from pynput import keyboard
 
 class App(QWidget):
-    #def __init__(self, OtherWindow):
-    def __init__(self):
+    def __init__(self, OtherWindow):
+    #def __init__(self):
         super().__init__()
         print("ths one is on github!!")
         self.setGeometry(100,100,440,800)
