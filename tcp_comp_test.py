@@ -5,7 +5,7 @@ import socket, time
 
 VERBOSE = True
 IP_ADDRESS = "143.215.102.135"
-IP_PORT = 12000
+IP_PORT = 12001
 
 def debug(text):
     if VERBOSE:
@@ -32,7 +32,9 @@ def connect():
     sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
     debug("Connecting...")
     try:
-        sock.connect((IP_ADDRESS, IP_PORT))
+        conn, addr = sock.accept()
+        data = conn.recv(4096)
+        print(data)
     except:
         debug("Connection failed.")
         return False
