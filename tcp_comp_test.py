@@ -13,7 +13,7 @@ try:
 except socket.gaierror:
     raise Exception("Failed to get host name")
 try:
-    serversocket.bind((hostname, TCP_PORT))
+    serversocket.bind(('143.215.102.135', TCP_PORT))
 except socket.error:
     raise Exception("Failed to bind socket")
 serversocket.listen(5)
