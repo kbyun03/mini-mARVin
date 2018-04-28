@@ -164,7 +164,7 @@ class MiniMarvin(QWidget):
             self.connectButton.setText("Connect")
             self.connected = False
             self.lis.stop()
-            #self.tRecv.join()
+            self.tRecv.join()
         
         if key == keyboard.Key.esc: return False #stop listener
 
