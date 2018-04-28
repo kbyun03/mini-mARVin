@@ -99,43 +99,43 @@ class MiniMarvin(QWidget):
     def recieveThread(self):
         while(1):
             msg = ''
-            # if self.connected:
-            try:
-                print("trying to recieve thread")
-                msg = self.tcpSocket.recv(4096)
-                print(msg)
-                #Assuming format is following
-                #msg = 'MARV [12,20] ; OBST [20,30] [30,40] ; HEAD 90'
+            if self.connected:
+                try:
+                    print("trying to recieve thread")
+                    msg = self.tcpSocket.recv(4096)
+                    print(msg)
+                    #Assuming format is following
+                    #msg = 'MARV [12,20] ; OBST [20,30] [30,40] ; HEAD 90'
 
-                seg = msg.split(' ')
+                    seg = msg.split(' ')
 
-                for i in range(0,len(seg)):
-                    if seg[i] == 'MARV':
-                        curPos= seg[i+1]
-                        self.myGui.moveCar(curPos)
-                    elif seg[i] == 'HEAD':
-                        angle = seg[i+1]
-                        self.myGui.rotate(angle)
-                    elif seg[i] == 'OBST':
-                        j = i
-                        while seg[j] != ';':
-                            j = j +1
-                            ObstPos = seg[j]
-                            self.myGui.showObstacle(ObstPos)
+                    for i in range(0,len(seg)):
+                        if seg[i] == 'MARV':
+                            curPos= seg[i+1]
+                            self.myGui.moveCar(curPos)
+                        elif seg[i] == 'HEAD':
+                            angle = seg[i+1]
+                            self.myGui.rotate(angle)
+                        elif seg[i] == 'OBST':
+                            j = i
+                            while seg[j] != ';':
+                                j = j +1
+                                ObstPos = seg[j]
+                                self.myGui.showObstacle(ObstPos)
+                    break
+
+
+
+                except socket.error as eMsg:
+                    print('exception in tcpSocket.recv(): ' + str(eMsg))
+                    self.tcpSocket.close()
+                    self.statusLabel.setText("Not Connected")
+                    self.connectButton.setText("Connect")
+                    self.connected = False
+                    self.lis.stop()
+                    break
+            else:
                 break
-
-
-
-            except socket.error as eMsg:
-                print('exception in tcpSocket.recv(): ' + str(eMsg))
-                self.tcpSocket.close()
-                self.statusLabel.setText("Not Connected")
-                self.connectButton.setText("Connect")
-                self.connected = False
-                self.lis.stop()
-                break
-            # else:
-            #     break
 
     def socketConnect(self):
         if (self.connected == False):
