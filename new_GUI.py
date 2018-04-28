@@ -49,12 +49,12 @@ class App(QWidget):
         self.boarder.setAlignment(QtCore.Qt.AlignCenter)
         self.boarder.setPixmap(self.pixmap_rect)
         self.boarder.adjustSize()
-
-        self.showObstacle(205, 305)
-        self.showObstacle(210,315)
+        self.createObstacle()
+        #self.showObstacle(205, 305)
+        #self.showObstacle(210,315)
         #self.showObstacle(20, 540)
 
-        self.showObstacle(115,15)
+        #self.showObstacle(115,15)
         self.show()
 
     """
@@ -103,6 +103,14 @@ class App(QWidget):
         self.x += new_x
         self.y += new_y
         self.tank.move(self.x, self.y)
+        print(self.showTankPos())
+        if self.showTankPos() == [20, 590]:
+            print("show Obstacle is called")
+            self.showObstacle(20,550)
+        elif self.showTankPos() == [60, 590]:
+            print("show obstacle is called again")
+            self.showObstacle(90,590)
+
 
     def showTankPos(self):
         return [self.x, self.y]
@@ -117,23 +125,32 @@ class App(QWidget):
 
 
 
-    def showObstacle(self, Obs_x, Obs_y):
+    def createObstacle(self):
 
         self.obstImage = QtGui.QImage('obsta_edited.png')
         self.pixmap_obst = QtGui.QPixmap(self.obstImage)
-        self.d.append("O{0}".format(self.obstCounter))
 
+        for i in range(0,10):
+            self.d.append(["O{0}".format(i), []])
+            label = QtWidgets.QLabel(self)
+            label.setPixmap(self.pixmap_obst)
+            label.move(9999, 9999)
+            label.adjustSize()
+            self.d[i][0] = label
 
-        label = QtWidgets.QLabel(self)
-        label.setPixmap(self.pixmap_obst)
-        label.move(Obs_x, Obs_y)
-        label.adjustSize()
-        label.show()  # <---show QLabel
-
-        self.d[self.obstCounter] = label
-        self.obstCounter += 1
         print(self.d)
-        #print("Obstacle Run")
+
+
+    def showObstacle(self,x ,y):
+
+        self.d[self.obstCounter][0].move(x,y)
+        self.d[self.obstCounter][1].append(x)
+        self.d[self.obstCounter][1].append(y)
+        print(self.d)
+        print(self.d[self.obstCounter])
+        self.d[self.obstCounter][0].show()
+        print(self.obstCounter)
+        self.obstCounter += 1
 
 
     """
