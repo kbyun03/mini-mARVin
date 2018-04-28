@@ -36,7 +36,7 @@ class App(QWidget):
         self.tank.setPixmap(self.pixmap)
         self.tank.adjustSize()
         self.tank.move(self.x, self.y)
-        
+
         self.boarder = QtWidgets.QLabel(self)
         self.boarder.setAlignment(QtCore.Qt.AlignCenter)
         self.boarder.setPixmap(self.pixmap_rect)
@@ -84,8 +84,10 @@ class App(QWidget):
         #print(self.d)
 
 
-    def showObstacle(self,x ,y):
+    def showObstacle(self,ObstPos):
         print("test if there is already another obstacle")
+        x = ObstPos[0]
+        y = ObstPos[1]
         print([x,y])
         print(self.d[self.obstCounter][1])
         if self.obstCounter != 0:
