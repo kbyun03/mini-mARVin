@@ -2,7 +2,7 @@ import socket
 import math
 import sys
 
-TCP_PORT = 12000
+TCP_PORT = 12001
 BUFFER_SIZE = 4096  # Normally 1024, but we want fast response
 try:
     serversocket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
