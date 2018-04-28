@@ -152,6 +152,7 @@ class MiniMarvin(QWidget):
             self.lis = keyboard.Listener(on_press=self.on_press)
             self.lis.start()
             self.tRecv.start()
+            #hi
         elif (self.connected == True):
             self.tcpSocket.close()
             self.statusLabel.setText("Not Connected")
