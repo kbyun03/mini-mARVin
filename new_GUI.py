@@ -10,8 +10,6 @@ class App(QWidget):
         print("ths one is on github")
         self.setGeometry(100,100,800,600)
         #Assuming the world is 2m(width) by 1m(height)
-        self.pixbycmWidth = 2000/800
-        self.pixbycmHeight = 1000/600
 
         self.setWindowTitle("New GUI Interface Window")
         self.currentState = 0
@@ -20,7 +18,7 @@ class App(QWidget):
 
         self.obstCounter = 0
         self.x = 200
-        self.y = 200
+        self.y = 710
         self.d = []
 
         #loading image for tank
@@ -30,9 +28,11 @@ class App(QWidget):
         #self.tank.move(self.x,self.y)
         #self.tank.adjustSize()
 
-        self.image= QtGui.QImage('smallcar.png')
+        self.image = QtGui.QImage('smallcar.png')
+        self.rectImage = QtGui.QImage('rectOutline.png')
 
         self.pixmap = QtGui.QPixmap(self.image)
+        self.pixmap_rect = QtGui.QPixmap(self.rectImage)
 
         self.tank = QtWidgets.QLabel(self)
         self.tank.setAlignment(QtCore.Qt.AlignCenter)
@@ -40,16 +40,18 @@ class App(QWidget):
         self.tank.adjustSize()
         self.tank.move(self.x, self.y)
 
+        self.boarder = QtWidgets.QLabel(self)
+        self.boarder.setAlignment(QtCore.Qt.AlignCenter)
+        self.boarder.setPixmap(self.pixmap_rect)
+        self.boarder.adjustSize()
+        self.createObstacle()
+        # self.showObstacle(205, 305)
+        # self.showObstacle(210,315)
+        # self.showObstacle(20, 540)
 
-
-
-
-
-        self.showObstacle(115,15)
-
-
+        # self.showObstacle(115,15)
         self.show()
-
+    """
     def keyPressEvent(self, e):
         def isPrintable(key):
             printable = [
@@ -88,29 +90,60 @@ class App(QWidget):
 
             self.changeHeading(3)
             self.moveCar(-10,0)
-
+    """
 
     def moveCar(self, new_x, new_y):
         self.x += new_x
         self.y += new_y
         self.tank.move(self.x, self.y)
+        print(self.showTankPos())
+        # -------------------- for debug ---------------
+        # need to put actual obstacle detection code to get obstacle position
+        if self.showTankPos() == [20, 590]:
+            print("show Obstacle is called")
+            self.showObstacle(20, 550)
+        elif self.showTankPos() == [60, 590]:
+            print("show obstacle is called again")
+            self.showObstacle(90, 590)
 
-    def showObstacle(self, Obs_x, Obs_y):
+    def showTankPos(self):
+        return [self.x, self.y]
+
+    def createObstacle(self):
+
+        self.obstImage = QtGui.QImage('obsta_edited.png')
+        self.pixmap_obst = QtGui.QPixmap(self.obstImage)
+
+        for i in range(0, 10):
+            self.d.append(["O{0}".format(i), []])
+            label = QtWidgets.QLabel(self)
+            label.setPixmap(self.pixmap_obst)
+            label.move(9999, 9999)
+            label.adjustSize()
+            self.d[i][0] = label
+
+        print(self.d)
+
+    def showObstacle(self, x, y):
+
+        self.d[self.obstCounter][0].move(x, y)
+        self.d[self.obstCounter][1].append(x)
+        self.d[self.obstCounter][1].append(y)
+        print(self.d)
+        print(self.d[self.obstCounter])
+        self.d[self.obstCounter][0].show()
+        print(self.obstCounter)
         self.obstCounter += 1
-
-        self.d.append(["O{0}".format(self.obstCounter), Obs_x, Obs_y])
-        self.d[0][0] =QtWidgets.QLabel(self)
-        self.d[0][0].setPixmap(QtGui.QPixmap("obsta_edited.png"))
-        self.d[0][0].move(Obs_x, Obs_y)
-        self.d[0][0].adjustSize()
-
 
         print("Obstacle Run")
 
-    def detect(self):
-        #this is where the sensor sends the data and checks where the obstacle is
-        #for now it uses fake data
-        cordinate = (205,305)
+    def detect(self, new_x, new_y, isDetected):
+        print("detected function working")
+        if isDetected == True:
+            self.moveCar(new_x, new_y)
+
+        else:
+            print("detected function not working")
 
     def changeHeading(self, directionCode):
         print("current state : " + str(self.currentState) + " directionCode : " + str(directionCode))
