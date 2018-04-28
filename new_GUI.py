@@ -6,21 +6,25 @@ from pynput import keyboard
 
 class App(QWidget):
     def __init__(self, OtherWindow):
+    #def __init__(self):
         super().__init__()
-        print("ths one is on github!")
-        self.setGeometry(100,100,800,600)
-        #the world is 143cm (height) by  77cm (width)
-        self.pixbycm_height = (800/ 143)
-        self.pixbycm_width = 600/77
+        print("ths one is on github")
+        self.setGeometry(100,100,440,800)
+
+        #Assuming the world is 147m(height) by 77m(height)
+
+        self.pixbycm_height = 800/147
+        self.pixbycm_width = 440/77
 
 
         self.setWindowTitle("New GUI Interface Window")
         self.currentState = 0
 
         #self.directionCode =0
+        self.flag = 0
 
         self.obstCounter = 0
-        self.x = 200
+        self.x = 20
         self.y = 710
         self.d = []
 
@@ -31,7 +35,7 @@ class App(QWidget):
         #self.tank.move(self.x,self.y)
         #self.tank.adjustSize()
 
-        self.image = QtGui.QImage('smallcar.png')
+        self.image= QtGui.QImage('smallcar.png')
         self.rectImage = QtGui.QImage('rectOutline.png')
 
         self.pixmap = QtGui.QPixmap(self.image)
@@ -43,17 +47,19 @@ class App(QWidget):
         self.tank.adjustSize()
         self.tank.move(self.x, self.y)
 
+
         self.boarder = QtWidgets.QLabel(self)
         self.boarder.setAlignment(QtCore.Qt.AlignCenter)
         self.boarder.setPixmap(self.pixmap_rect)
         self.boarder.adjustSize()
         self.createObstacle()
-        # self.showObstacle(205, 305)
-        # self.showObstacle(210,315)
-        # self.showObstacle(20, 540)
+        #self.showObstacle(205, 305)
+        #self.showObstacle(210,315)
+        #self.showObstacle(20, 540)
 
-        # self.showObstacle(115,15)
+        #self.showObstacle(115,15)
         self.show()
+
     """
     def keyPressEvent(self, e):
         def isPrintable(key):
@@ -95,50 +101,22 @@ class App(QWidget):
             self.moveCar(-10,0)
     """
 
+
     def moveCar(self, new_x, new_y):
         self.x += new_x
         self.y += new_y
         self.tank.move(self.x, self.y)
         print(self.showTankPos())
-        # -------------------- for debug ---------------
-        # need to put actual obstacle detection code to get obstacle position
         if self.showTankPos() == [20, 590]:
             print("show Obstacle is called")
-            self.showObstacle(20, 550)
+            self.showObstacle(20,round(-15 * self.pixbycm_height,2) + 590)
         elif self.showTankPos() == [60, 590]:
             print("show obstacle is called again")
-            self.showObstacle(90, 590)
+            self.showObstacle(90,590)
+
 
     def showTankPos(self):
         return [self.x, self.y]
-
-    def createObstacle(self):
-
-        self.obstImage = QtGui.QImage('obsta_edited.png')
-        self.pixmap_obst = QtGui.QPixmap(self.obstImage)
-
-        for i in range(0, 10):
-            self.d.append(["O{0}".format(i), []])
-            label = QtWidgets.QLabel(self)
-            label.setPixmap(self.pixmap_obst)
-            label.move(9999, 9999)
-            label.adjustSize()
-            self.d[i][0] = label
-
-        print(self.d)
-
-    def showObstacle(self, x, y):
-
-        self.d[self.obstCounter][0].move(x, y)
-        self.d[self.obstCounter][1].append(x)
-        self.d[self.obstCounter][1].append(y)
-        print(self.d)
-        print(self.d[self.obstCounter])
-        self.d[self.obstCounter][0].show()
-        print(self.obstCounter)
-        self.obstCounter += 1
-
-        print("Obstacle Run")
 
     def detect(self, new_x, new_y, isDetected):
         print("detected function working")
@@ -148,8 +126,64 @@ class App(QWidget):
         else:
             print("detected function not working")
 
-    #Need to change the heading function, since we are going to need IMU's angle data
+
+
+    def createObstacle(self):
+
+        self.obstImage = QtGui.QImage('obsta_edited.png')
+        self.pixmap_obst = QtGui.QPixmap(self.obstImage)
+
+        for i in range(0,80):
+            self.d.append(["O{0}".format(i), []])
+            label = QtWidgets.QLabel(self)
+            label.setPixmap(self.pixmap_obst)
+            label.move(9999, 9999)
+            label.adjustSize()
+            self.d[i][0] = label
+
+        """
+        self.d.append(["O{0}".format(self.obstCounter), []])
+        label = QtWidgets.QLabel(self)
+        label.setPixmap(self.pixmap_obst)
+        label.move(9999, 9999)
+        label.adjustSize()
+        label.show()
+        self.d[self.obstCounter][0] = label
+        """
+
+        print(self.d)
+
+
+    def showObstacle(self,x ,y):
+        print("test if there is already another obstacle")
+        print([x,y])
+        print(self.d[self.obstCounter][1])
+        if self.obstCounter != 0:
+            for i in range(0,self.obstCounter):
+                if [x,y] == self.d[i][1]:
+                    print("The Obstacle is already there")
+                    return
+
+
+        print("The Obstacle is not there")
+        self.d[self.obstCounter][0].move(x, y)
+        self.d[self.obstCounter][1].append(x)
+        self.d[self.obstCounter][1].append(y)
+        print(self.d)
+        print(self.d[self.obstCounter])
+        self.d[self.obstCounter][0].show()
+        print(self.obstCounter)
+        self.obstCounter += 1
+
+
+
+
+
+    """
+
     def changeHeading(self, directionCode):
+        #direction data from IMU
+        #this is temporary code
         print("current state : " + str(self.currentState) + " directionCode : " + str(directionCode))
         if self.currentState == directionCode:
             print("currentState == Directioncode")
@@ -169,17 +203,19 @@ class App(QWidget):
             self.pixmap = self.pixmap.transformed(transform)
             self.tank.setPixmap(self.pixmap)
         self.currentState = directionCode
+    """
+
+    def rotate(self, angle):
+        transform = QtGui.QTransform().rotate(angle)
+        self.pixmap = self.pixmap.transformed(transform)
+        self.tank.setPixmap(self.pixmap)
 
 
-
-
-
-
-
-
+    def printStatement(self, message):
+        print("this is from print Statement in GUI")
+        print(message)
 
 """
-
 if __name__ == '__main__':
     app = QApplication(sys.argv)
     ex = App()
