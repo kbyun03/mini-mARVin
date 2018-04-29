@@ -3,6 +3,7 @@ import time
 import sys
 import math
 from IMU import *
+import IMU
 import datetime
 import os
 from threading import Thread
@@ -11,6 +12,9 @@ from threading import Thread
 
 class ImuPosHeading():
     def __init__(self):
+
+        IMU.detectIMU()
+        IMU.initIMU()
         self.RAD_TO_DEG = 57.29578
         self.M_PI = 3.14159265358979323846
         self.G_GAIN = 0.070     # [deg/s/LSB]  If you change the dps for gyro, you need to update this value accordingly
@@ -37,6 +41,37 @@ class ImuPosHeading():
         self.KFangleX = 0.0
         self.KFangleY = 0.0
 
+
+    def reInit(self):
+
+        IMU.detectIMU()
+        IMU.initIMU()
+        self.RAD_TO_DEG = 57.29578
+        self.M_PI = 3.14159265358979323846
+        self.G_GAIN = 0.070     # [deg/s/LSB]  If you change the dps for gyro, you need to update this value accordingly
+        self.AA =  0.40         # Complementary filter constant
+        self.MAG_LPF_FACTOR = 0.4   # Low pass filter constant magnetometer
+        self.ACC_LPF_FACTOR = 0.4   # Low pass filter constant for accelerometer
+        self.ACC_MEDIANTABLESIZE = 9        # Median filter table size for accelerometer. Higher = smoother but a longer delay
+        self.MAG_MEDIANTABLESIZE = 9        # Median filter table size for magnetometer. Higher = smoother but a longer delay
+
+        #Kalman filter variables
+        self.Q_angle = 0.02
+        self.Q_gyro = 0.0015
+        self.R_angle = 0.005
+        self.y_bias = 0.0
+        self.x_bias = 0.0
+        self.XP_00 = 0.0
+        self.XP_01 = 0.0
+        self.XP_10 = 0.0
+        self.XP_11 = 0.0
+        self.YP_00 = 0.0
+        self.YP_01 = 0.0
+        self.YP_10 = 0.0
+        self.YP_11 = 0.0
+        self.KFangleX = 0.0
+        self.KFangleY = 0.0
+        
     def kalmanFilterY(self,accAngle, gyroRate, DT):
         y=0.0
         S=0.0
@@ -129,10 +164,11 @@ class ImuPosHeading():
         magYmin =  -312
         magZmin =  -334
         magXmax =  140
-        magYmax =  -461
+        magYmax =  461
         magZmax =  1009
 
-        counter = 0
+        count = 0
+        readings = []
         while True:
             #Read the accelerometer,gyroscope and magnetometer values
             ACCx = readACCx()
@@ -260,7 +296,8 @@ class ImuPosHeading():
                 tiltCompensatedHeading -= 360
 
             #slow program down a bit, makes the output more readable
-            counter = counter +1
-
-            if counter >= 20:
-                return tiltCompensatedHeading
+            readings.insert(count,tiltCompensatedHeading)
+            count = count +1
+##
+            if count >= 20:
+                return sum(readings)/len(readings)
