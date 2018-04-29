@@ -63,12 +63,8 @@ class MiniMarvin(QWidget):
 
 
         self.setWindowTitle('mini-mARVin')
-        self.openConnection = False
-
-        self.tRecv = Thread(target = self.recieveThread())
 
         self.show()
-        self.mutex = Lock()
 
     def openWindow(self):
 
@@ -96,63 +92,24 @@ class MiniMarvin(QWidget):
         self.move((screen.width()-size.width())/2, 
             (screen.height()-size.height())/2)
 
-    def recieveThread(self):
-        while(1):
-            msg = ''
-            if self.connected:
-                try:
-                    print("trying to recieve thread")
-                    msg = self.tcpSocket.recv(4096)
-                    print(msg)
-                    #Assuming format is following
-                    #msg = 'MARV [12,20] ; OBST [20,30] [30,40] ; HEAD 90'
-
-                    seg = msg.split(' ')
-
-                    for i in range(0,len(seg)):
-                        if seg[i] == 'MARV':
-                            curPos= seg[i+1]
-                            self.myGui.moveCar(curPos)
-                        elif seg[i] == 'HEAD':
-                            angle = seg[i+1]
-                            self.myGui.rotate(angle)
-                        elif seg[i] == 'OBST':
-                            j = i
-                            while seg[j] != ';':
-                                j = j +1
-                                ObstPos = seg[j]
-                                self.myGui.showObstacle(ObstPos)
-                    break
-
-
-
-                except socket.error as eMsg:
-                    print('exception in tcpSocket.recv(): ' + str(eMsg))
-                    self.tcpSocket.close()
-                    self.statusLabel.setText("Not Connected")
-                    self.connectButton.setText("Connect")
-                    self.connected = False
-                    self.lis.stop()
-                    break
-            else:
-                break
-
     def socketConnect(self):
         if (self.connected == False):
             self.blockSize = 0
             self.tcpSocket =  socket.socket(socket.AF_INET, socket.SOCK_STREAM)
             try:
                 self.tcpSocket.connect((self.ipAddr.text(), 12000))
-            except:
-                print("Connection failed.")
-            self.statusLabel.setText("Connected")
-            self.connectButton.setText("Disconnect")
-            self.connected = True
-            self.openConnection = True
-            self.openWindow()
-            self.lis = keyboard.Listener(on_press=self.on_press)
-            self.lis.start()
-            self.tRecv.start()
+                self.statusLabel.setText("Connected")
+                self.connectButton.setText("Disconnect")
+                self.connected = True
+                self.openConnection = True
+                self.openWindow()
+                self.lis = keyboard.Listener(on_press=self.on_press)
+                self.lis.start()
+                self.receiveThread = ReceiveThread(self)
+                self.receiveThread.start()
+            except socket.error as eMsg:
+                print("Connection failed." + eMsg)
+
             #hi
         elif (self.connected == True):
             self.tcpSocket.close()
@@ -160,10 +117,8 @@ class MiniMarvin(QWidget):
             self.connectButton.setText("Connect")
             self.connected = False
             self.lis.stop()
-            self.tRecv.join()
+            self.receiveThread.join()
 
-
-        
     def on_press(self, key):
         try:
             message = ''
@@ -178,23 +133,61 @@ class MiniMarvin(QWidget):
             elif key.char == 'q':
                 message = "S"
             print("sending: " + message)
-            # now use the QDataStream and write the byte array to it.
-            # now send the QByteArray.
             self.tcpSocket.sendall(message.encode())
+
             
         except socket.error as msg:
-            print ("excepton in sending data: " + str(msg))
+            print ("excepton in sending or receiving data: " + str(msg))
             self.tcpSocket.close()
             self.statusLabel.setText("Not Connected")
             self.connectButton.setText("Connect")
             self.connected = False
             self.lis.stop()
-            self.tRecv.join()
+            self.recieveThread.join()
         
         if key == keyboard.Key.esc: return False #stop listener
 
+class ReceiveThread(Thread):
+    def __init__(self, mainSelf):
+        Thread.__init__(self)
+        self.window = mainSelf.window
+        self.mainSelf = mainSelf
+        self.tcpSocket = mainSelf.tcpSocket
+        
+    def run(self):
+        while(1):
+            msgStr = ''
+            try:
+                print("trying to receive thread")
+                msg = self.tcpSocket.recv(4096)
+                msgStr = str(msg.decode())
+                print(msgStr)
+                    #Assuming format is following
+                    #msg = 'MARV [12,20] ; OBST [20,30] [30,40] ; HEAD 90'
 
-    
+                seg = msgStr.split(' ')
+
+                for i in range(0,len(seg)):
+                    if seg[i] == 'MARV':
+                        curPos= seg[i+1]
+                        self.mainSelf.myGui.moveCar(curPos)
+                    elif seg[i] == 'HEAD':
+                        angle = seg[i+1]
+                        self.mainSelf.myGui.rotate(angle)
+                    elif seg[i] == 'OBST':
+                        j = i
+                        while seg[j] != ';':
+                            j = j +1
+                            ObstPos = seg[j]
+                            self.mainSelf.myGui.showObstacle(ObstPos)
+
+
+
+            except socket.error as eMsg:
+                print('exception in tcpSocket.recv(): ' + str(eMsg))
+                break
+
+
 
 
 if __name__ == '__main__':
