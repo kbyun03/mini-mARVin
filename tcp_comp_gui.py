@@ -170,16 +170,21 @@ class ReceiveThread(Thread):
                 for i in range(0,len(seg)):
                     if seg[i] == 'MARV':
                         curPos= seg[i+1]
-                        self.mainSelf.myGui.moveCar(curPos)
+                        posSeg = curPos.split(',')
+                        curPosList = []
+                        curPosList.append(int(posSeg[0][1:(len(posSeg[0]))]))
+                        curPosList.append(int(posSeg[1][0:(len(posSeg[1])-1)]))
+                        self.mainSelf.myGui.moveCar(curPosList)
                     elif seg[i] == 'HEAD':
                         angle = seg[i+1]
-                        self.mainSelf.myGui.rotate(angle)
-                    elif seg[i] == 'OBST':
-                        j = i
-                        while seg[j] != ';':
-                            j = j +1
-                            ObstPos = seg[j]
-                            self.mainSelf.myGui.showObstacle(ObstPos)
+                        
+                        self.mainSelf.myGui.rotate(float(angle))
+##                    elif seg[i] == 'OBST':
+##                        j = i
+##                        while seg[j] != ';':
+##                            j = j +1
+##                            ObstPos = seg[j]
+##                            self.mainSelf.myGui.showObstacle(ObstPos)
 
 
 
