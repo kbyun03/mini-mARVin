@@ -1,3 +1,5 @@
+#!/usr/bin/env python
+# -*- coding: utf-8 -*-
 from gpiozero.output_devices import PWMOutputDevice, DigitalOutputDevice
 from gpiozero.devices import GPIODevice, Device, CompositeDevice
 from gpiozero.threads import GPIOThread
@@ -18,6 +20,7 @@ global sockConn
 global imuObj
 global pwm
 global sonarObj
+
 
 def debug(text):
     if VERBOSE:
@@ -59,11 +62,11 @@ class SocketConnect():
             will be delineated by ' '
 
          '''
-        self.mutex.acquire()
-        self.sendMessage = self.sendMessage + self.messageType[type]
-        for i in len(self.messageType):
-            self.sendMessage = self.sendMessage + self.messageType[i] + msg + ';'
-        self.mutex.release()
+##        self.mutex.acquire()
+##        self.sendMessage = self.sendMessage + self.messageType[type]
+##        for i in len(self.messageType):
+        self.sendMessage = msg
+##        self.mutex.release()
 
     def checkConnection(self):
         while (1):
@@ -93,20 +96,22 @@ class SocketConnect():
     def socketSender(self):
 
        while(1):
-           if len(self.sendMessage) is not 0:
-               try:
-                   self.mutex.acquire()
-                   print('sending; ' + self.sendmessage)
-                   self.conn.sendall(self.sendMessage.encode())
-                   debug('sending message: ' + self.sendMessage)
+           try:
+    ##                   self.mutex.acquire()
+    ##               debug('sending message: ' + msg)
+                if len(self.sendMessage) is not 0:
+                   print('sending ' + self.sendMessage)
+                   tempSocket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+                   tempSocket.connect(('lawn-143-215-106-82.lawn.gatech.edu', 12001))
+                   print('msg is:' + self.sendMessage)
+                   tempSocket.sendall(self.sendMessage.encode())
                    self.sendMessage = ''
-                   self.mutex.release()
-               except socket.error as eMsg:
-                   debug('exception occured in conn.sendall():' + str(eMsg))
-                   self.mutex.acquire()
-                   self.connected = False
-                   self.mutex.release()
-                   break
+        ##               self.mutex.release()
+           except socket.error as eMsg:
+               debug('exception occured in conn.sendall():' + str(eMsg))
+    ##               self.mutex.acquire()
+               self.connected = False
+    ##                   self.mutex.release()
 
     def socketReciever(self):
         while (1):
@@ -172,15 +177,18 @@ class SocketConnect():
             xyMarv = sonarObj.collectAngleVectors(heading)
             xyMarvString = '[' + str(xyMarv[0]) + ',' + str(xyMarv[1]) + ']'
             print ("Marvin " + xyMarvString)
-            sonarObj.readSonar()
-            print ('Sonar Dist Data:')
-            for i in sonarObj.distData:
-                print( 'sonar num: ' + str(i[0]) + 'dist: ' + str(i[1]))
-            obstLocString = sonarObj.getObstacleLoc(heading)
-            print ("Obstacal Location " + obstLocString)
-            sockConn.addToSendMessage(obstLocString, 1)
-            sockConn.addToSendMessage(xyMarvString, 0)
-            sockConn.addToSendMessage(str(heading), 2)
+            sockConn.addToSendMessage(xyMarvString, 1)
+##            sonarObj.readSonar()
+##            print ('Sonar Dist Data:')
+##            for i in sonarObj.distData:
+##                print( 'sonar num: ' + str(i[0]) + 'dist: ' + str(i[1]))
+##            obstLocString = sonarObj.getObstacleLoc(heading)
+##            print ("Obstacal Location " + obstLocString)
+##            sockConn.addToSendMessage(obstLocString, 1)
+##            sockConn.addToSendMessage(xyMarvString, 0)
+##            sockConn.addToSendMessage(str(heading), 2)
+
+
 
 
 class Sonar():
