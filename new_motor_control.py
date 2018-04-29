@@ -102,7 +102,7 @@ class SocketConnect():
                 if len(self.sendMessage) is not 0:
                    print('sending ' + self.sendMessage)
                    tempSocket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-                   tempSocket.connect(('lawn-143-215-106-82.lawn.gatech.edu', 12001))
+                   tempSocket.connect(('lawn-143-215-98-38.lawn.gatech.edu', 12001))
                    print('msg is:' + self.sendMessage)
                    tempSocket.sendall(self.sendMessage.encode())
                    self.sendMessage = ''
@@ -171,11 +171,11 @@ class SocketConnect():
             self.motorL.stop()
             self.motorR.stop()
 
-
+            imuObj.reInit()
             heading = imuObj.readIMU(initialHeading)
             print ("Heading %5.2f" % (heading))
             xyMarv = sonarObj.collectAngleVectors(heading)
-            xyMarvString = '[' + str(xyMarv[0]) + ',' + str(xyMarv[1]) + ']'
+            xyMarvString = '[' + str(xyMarv[0]) + ',' + str(xyMarv[1]) + ']' + ' ' + str(heading)
             print ("Marvin " + xyMarvString)
             sockConn.addToSendMessage(xyMarvString, 1)
 ##            sonarObj.readSonar()
@@ -464,37 +464,37 @@ class Sonar():
 
         if heading > 0 and heading <= 45:
             #Collect Data from Walls 4 and 3
-            pwm.value = self.adjustAngle(180-heading)/100
+            pwm.value = self.adjustAngle(90+heading)/100
             time.sleep(.5)
             x = maxX- self.readLiDAR()
-            pwm.value = self.adjustAngle(90-heading)/100
+            pwm.value = self.adjustAngle(0+heading)/100
             time.sleep(.5)
             y = maxY- self.readLiDAR()
 
         if heading > 45 and heading <= 90:
             #Collect Data from Walls 4 and 3
-            pwm.value = self.adjustAngle(180-heading)/100
+            pwm.value = self.adjustAngle(90+heading)/100
             time.sleep(.5)
             x = maxX- self.readLiDAR()
-            pwm.value = self.adjustAngle(90-heading)/100
+            pwm.value = self.adjustAngle(0+heading)/100
             time.sleep(.5)
             y = maxY- self.readLiDAR()
 
         if heading > 90 and heading <= 135:
             #Collect Data from Walls 2 and 3
-            pwm.value = self.adjustAngle(180-heading+90)/100
+            pwm.value = self.adjustAngle(heading-90)/100
             time.sleep(.5)
             x = self.readLiDAR()
-            pwm.value = self.adjustAngle(90-heading+90)/100
+            pwm.value = self.adjustAngle(heading)/100
             time.sleep(.5)
             y = maxY-self.readLiDAR()
 
         if heading > 135:
             #Collect Data from Walls 2 and 3
-            pwm.value = self.adjustAngle(180-heading+90)/100
+            pwm.value = self.adjustAngle(heading-90)/100
             time.sleep(.5)
             x = self.readLiDAR()
-            pwm.value = self.adjustAngle(90-heading+90)/100
+            pwm.value = self.adjustAngle(heading)/100
             time.sleep(.5)
             y = maxY- self.readLiDAR()
 
@@ -692,6 +692,8 @@ class MotorL(SourceMixin, CompositeDevice):
 
 
 def main(args):
+
+    time.sleep(30)
 
     global sockConn
     global sonarObj
