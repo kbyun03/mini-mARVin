@@ -5,8 +5,8 @@ from PyQt5.QtCore import Qt
 from pynput import keyboard
 
 class App(QWidget):
-    def __init__(self, OtherWindow):
-    #def __init__(self):
+    #def __init__(self, OtherWindow):
+    def __init__(self):
         super().__init__()
         print("ths one is on github!!")
         self.setGeometry(100,100,400,720)
@@ -141,10 +141,10 @@ class App(QWidget):
         print("this is from print Statement in GUI")
         print(message)
 
-
+"""
 if __name__ == '__main__':
     app = QApplication(sys.argv)
     ex = App()
 
     sys.exit(app.exec_())
-
+"""
