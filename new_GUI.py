@@ -8,32 +8,22 @@ class App(QWidget):
     def __init__(self, OtherWindow):
     #def __init__(self):
         super().__init__()
-        print("ths one is on github")
-        self.setGeometry(100,100,440,800)
-
+        print("ths one is on github!!")
+        self.setGeometry(100,100,400,720)
+        # 715 x 385 => 720x  390
         #Assuming the world is 147m(height) by 77m(height)
 
-        self.pixbycm_height = 800/147
-        self.pixbycm_width = 440/77
+        self.pixbycm_height = 630/147
+        self.pixbycm_width = 320/77
 
 
         self.setWindowTitle("New GUI Interface Window")
-        self.currentState = 0
-
-        #self.directionCode =0
-        self.flag = 0
+        self.currentAngle = 0
 
         self.obstCounter = 0
-        self.x = 20
-        self.y = 710
+        self.x = 10
+        self.y = 650
         self.d = []
-
-        #loading image for tank
-
-        #self.tank = QtWidgets.QLabel(self)
-        #self.tank.setPixmap(QtGui.QPixmap('smallcar.png'))
-        #self.tank.move(self.x,self.y)
-        #self.tank.adjustSize()
 
         self.image= QtGui.QImage('smallcar.png')
         self.rectImage = QtGui.QImage('rectOutline.png')
@@ -47,17 +37,11 @@ class App(QWidget):
         self.tank.adjustSize()
         self.tank.move(self.x, self.y)
 
-
         self.boarder = QtWidgets.QLabel(self)
         self.boarder.setAlignment(QtCore.Qt.AlignCenter)
         self.boarder.setPixmap(self.pixmap_rect)
         self.boarder.adjustSize()
         self.createObstacle()
-        #self.showObstacle(205, 305)
-        #self.showObstacle(210,315)
-        #self.showObstacle(20, 540)
-
-        #self.showObstacle(115,15)
         self.show()
 
     """
@@ -103,8 +87,8 @@ class App(QWidget):
 
 
     def moveCar(self, new_x, new_y):
-        self.x += new_x
-        self.y += new_y
+        self.x = new_x * self.pixbycm_width + 10
+        self.y = 650 - (new_y * self.pixbycm_height)
         self.tank.move(self.x, self.y)
         print(self.showTankPos())
         if self.showTankPos() == [20, 590]:
