@@ -44,78 +44,154 @@ class DistanceSensor():
     def _read(self):
         # Make sure the echo pin is low then ensure the echo event is clear
         dist = []
-        GPIO.output(self.trigger0, True)
-        sleep(0.00001)
-        GPIO.output(self.trigger0, False)
-        
+        distTest = []
+        for i in range(0,30):
+            GPIO.output(self.trigger0, True)
+            sleep(0.00001)
+            GPIO.output(self.trigger0, False)
+            
 
-        StartTime = time()
-        StopTime = time()
-        
-        while(GPIO.input(self.echo0) == 0):
             StartTime = time()
-        while(GPIO.input(self.echo0) == 1):
             StopTime = time()
-        TimeElapsed = StopTime - StartTime
-        distance0 = (TimeElapsed *34326) / 2
+            
+            while(GPIO.input(self.echo0) == 0):
+                StartTime = time()
+            while(GPIO.input(self.echo0) == 1):
+                StopTime = time()
+            TimeElapsed = StopTime - StartTime
+            distance0 = (TimeElapsed *34326) / 2
+            print('Front: ' + str(distance0))
+            distTest.append(distance0)
+
+        distTest.sort()
+        minDist = distTest[0]
+
+        correctedDist = []
+        for i in distTest:
+            if minDist < 2:
+                minDist = i
+
+            if (i > 2) or (i == 2):
+                if (i - minDist) <= 5:
+                    correctedDist.append(i)
+        print('corrected list: ' + str(correctedDist))
+
+        distance0 = sum(correctedDist) / float(len(correctedDist))
+
 
         dist.append(distance0)
 
-        GPIO.output(self.trigger1, True)
-        sleep(0.00001)
-        GPIO.output(self.trigger1, False)
-        
+        distTest = []
+        for i in range(0,30):
+            GPIO.output(self.trigger1, True)
+            sleep(0.00001)
+            GPIO.output(self.trigger1, False)
+            
 
-        StartTime = time()
-        StopTime = time()
-        
-        while(GPIO.input(self.echo1) == 0):
             StartTime = time()
-        while(GPIO.input(self.echo1) == 1):
             StopTime = time()
-        TimeElapsed = StopTime - StartTime
-        distance1 = (TimeElapsed *34326) / 2
+            
+            while(GPIO.input(self.echo1) == 0):
+                StartTime = time()
+            while(GPIO.input(self.echo1) == 1):
+                StopTime = time()
+            TimeElapsed = StopTime - StartTime
+            distance1 = (TimeElapsed *34326) / 2
+            distTest.append(distance1)
 
+
+        distTest.sort()
+        minDist = distTest[0]
+
+        correctedDist = []
+        for i in distTest:
+            if minDist < 2:
+                minDist = i
+
+            if (i > 2) or (i == 2):
+                if (i - minDist) <= 5:
+                    correctedDist.append(i)
+            
+
+        print('corrected list: ' + str(correctedDist))
+
+        distance1 = sum(correctedDist) / float(len(correctedDist))
         dist.append(distance1)
 
-        GPIO.output(self.trigger2, True)
-        sleep(0.00001)
-        GPIO.output(self.trigger2, False)
-        
+        distTest = []
+        for i in range(0,30):
+            GPIO.output(self.trigger2, True)
+            sleep(0.00001)
+            GPIO.output(self.trigger2, False)
 
-        StartTime = time()
-        StopTime = time()
-        
-        while(GPIO.input(self.echo2) == 0):
+            tStart = time()
+            tNow = time()
+
             StartTime = time()
-        while(GPIO.input(self.echo2) == 1):
             StopTime = time()
-        TimeElapsed = StopTime - StartTime
-        distance2 = (TimeElapsed *34326) / 2
+            while(GPIO.input(self.echo2) == 0):
+                StartTime = time()
+            while(GPIO.input(self.echo2) == 1):
+                StopTime = time()
+            TimeElapsed = StopTime - StartTime
+            distance2 = (TimeElapsed *34326) / 2
+            distTest.append(distance2)
+
+        distTest.sort()
+        minDist = distTest[0]
+
+        correctedDist = []
+        for i in distTest:
+            if minDist < 2:
+                minDist = i
+
+            if (i > 2) or (i == 2):
+                if (i - minDist) <= 5:
+                    correctedDist.append(i)
+
+        print('corrected list: ' + str(correctedDist))
+
+        distance2 = sum(correctedDist) / float(len(correctedDist))
 
         dist.append(distance2)
 
-        GPIO.output(self.trigger3, True)
-        sleep(0.00001)
-        GPIO.output(self.trigger3, False)
-        
+        distTest = []
+        for i in range(0,30):
 
-        StartTime = time()
-        StopTime = time()
-        
-        while(GPIO.input(self.echo3) == 0):
+            GPIO.output(self.trigger3, True)
+            sleep(0.00001)
+            GPIO.output(self.trigger3, False)
+            
+
             StartTime = time()
-        while(GPIO.input(self.echo3) == 1):
             StopTime = time()
-        TimeElapsed = StopTime - StartTime
-        distance3 = (TimeElapsed *34326) / 2
+            
+            while(GPIO.input(self.echo3) == 0):
+                StartTime = time()
+            while(GPIO.input(self.echo3) == 1):
+                StopTime = time()
+            TimeElapsed = StopTime - StartTime
+            distance3 = (TimeElapsed *34326) / 2
+            distTest.append(distance3)
+            
+        distTest.sort()
+        minDist = distTest[0]
+        correctedDist = []
+        for i in distTest:
+            if minDist < 2:
+                minDist = i
 
+            if (i > 2) or (i == 2):
+                if (i - minDist) <= 5:
+                    correctedDist.append(i)
+
+        print('corrected list: ' + str(correctedDist))
+
+        distance3 = sum(correctedDist) / float(len(correctedDist))
         dist.append(distance3)
        
        
 
-        
-        
         return dist
 '''
  def getObstacleLoc(self, heading):
