@@ -9,20 +9,20 @@ class App(QWidget):
     #def __init__(self):
         super().__init__()
         print("ths one is on github!!")
-        self.setGeometry(100,100,440,800)
-
+        self.setGeometry(100,100,400,720)
+        # 715 x 385 => 720x  390
         #Assuming the world is 147m(height) by 77m(height)
 
-        self.pixbycm_height = 800/147
-        self.pixbycm_width = 440/77
+        self.pixbycm_height = 630/147
+        self.pixbycm_width = 320/77
 
 
         self.setWindowTitle("New GUI Interface Window")
         self.currentAngle = 0
 
         self.obstCounter = 0
-        self.x = 20
-        self.y = 710
+        self.x = 10
+        self.y = 650
         self.d = []
 
         self.image= QtGui.QImage('smallcar.png')
@@ -48,8 +48,11 @@ class App(QWidget):
     def moveCar(self, curPos):
         new_x = curPos[0]
         new_y = curPos[1]
-        self.x += new_x
-        self.y += new_y
+        self.x = new_x * self.pixbycm_width + 10
+        self.y = 650 - (new_y * self.pixbycm_height)
+
+        #self.x += new_x
+        #self.y += new_y
         self.tank.move(self.x, self.y)
         print(self.showTankPos())
 
