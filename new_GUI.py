@@ -91,7 +91,7 @@ class App(QWidget):
         print("test if there is already another obstacle")
         [tankx, tanky] = self.showTankPos()
         x = ObstPos[0] + tankx
-        y = ObstPos[1] + tanky
+        y = (ObstPos[1]*-1) + tanky
         print([x,y])
         print(self.d[self.obstCounter][1])
         if self.obstCounter != 0:
