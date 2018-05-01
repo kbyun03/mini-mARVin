@@ -82,6 +82,7 @@ class App(QWidget):
 
 
         #print(self.d)
+            #idk
 
 
     def showObstacle(self,ObstPos):
