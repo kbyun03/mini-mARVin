@@ -65,6 +65,7 @@ class SocketConnect():
         self.sendMessage = self.sendMessage + self.messageType[a_type] + ' ' + msg + ' ' + '; '
 
     def checkConnection(self):
+        global initialHeading
         while (1):
             self.mutex.acquire()
             if (not self.connected) and (not self.openConnection):
@@ -77,6 +78,7 @@ class SocketConnect():
                 self.tRecv.start()
                 self.motorR = MotorR()
                 self.motorL = MotorL()
+                initialHeading = imuObj.readIMU(0)
             elif (not self.connected) and (self.openConnection):
                 self.closeConn()
                 self.openConnection = False
@@ -165,16 +167,16 @@ class SocketConnect():
             print ("Marvin " + xyMarvString)
 
             #reading sonar data from sonarDist
-            d = sonarObj.readSonar(heading)
-
-            print ('Sonar Dist Data: ' + str(d))
+##            d = sonarObj.readSonar(heading)
+##
+##            print ('Sonar Dist Data: ' + str(d))
 
             
 ##            obstLocString = sonarObj.getObstacleLoc(heading)
 ##            print ("Obstacal Location " + obstLocString)
             sockConn.addToSendMessage(str(heading), 2)
             sockConn.addToSendMessage(xyMarvString, 0)
-            sockConn.addToSendMessage(str(d), 1)
+##            sockConn.addToSendMessage(str(d), 1)
 
 
 
@@ -527,7 +529,7 @@ def main(args):
     sockConn = SocketConnect(12000) ## starts recv and send threads; recv thread passes cmds directly to executeCommand to control motor
     sonarObj = Sonar()
     imuObj = ImuPosHeading()
-    initialHeading = imuObj.readIMU(0)
+
     pwm= PWMOutputDevice(25)
     pwm.frequency = 50
     pwm.value = 2.2/100
