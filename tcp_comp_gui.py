@@ -179,12 +179,17 @@ class ReceiveThread(Thread):
                         angle = seg[i+1]
                         
                         self.mainSelf.myGui.rotate(float(angle))
-##                    elif seg[i] == 'OBST':
-##                        j = i
-##                        while seg[j] != ';':
-##                            j = j +1
-##                            ObstPos = seg[j]
-##                            self.mainSelf.myGui.showObstacle(ObstPos)
+                    elif seg[i] == 'OBST':
+                        j = i
+
+                        ObstPos = seg[j + 1]
+                        posSeg = ObstPos.split(',')
+                        obstPosList = []
+                        obstPosList.append(float(posSeg[0][1:(len(posSeg[0]))]))
+                        obstPosList.append(float(posSeg[1][0:(len(posSeg[1]) - 1)]))
+                        print("ObstPos: " + str(ObstPos))
+                        print("curPosList passed to showObstacle: " + str(obstPosList))
+                        self.mainSelf.myGui.showObstacle(obstPosList, curPosList)
 
 
 
