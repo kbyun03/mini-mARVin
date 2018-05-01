@@ -56,6 +56,14 @@ class App(QWidget):
         self.x = new_x * self.pixbycm_width + 10
         self.y = 650 - (new_y * self.pixbycm_height)
 
+        if self.x > 330:
+            self.x = 330
+        if self.y > 650:
+            self.y = 650
+        if self.x < 10:
+            self.x = 10
+        if self.y <20:
+            self.y = 20
         #self.x += new_x
         #self.y += new_y
         self.tank.move(self.x, self.y)
@@ -106,6 +114,16 @@ class App(QWidget):
 
             x = (self.pixbycm_width* ObstPos_x) + 10 + tankx
             y = (self.pixbycm_height* ObstPos_y*-1) + tanky
+
+            if ObstPos_x <= 10:
+                return
+            elif ObstPos_x >= 330:
+                return
+            elif ObstPos_y <= 20:
+                return
+            elif ObstPos_y >= 650:
+                return
+
             #print([x,y])
             #print(self.d[self.obstCounter][1])
             if self.obstCounter != 0:
