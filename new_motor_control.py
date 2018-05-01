@@ -135,23 +135,23 @@ class SocketConnect():
             self.motorL.stop()
             self.motorR.stop()
             time.sleep(0.1)
-            self.motorL.forward(0.5)
-            self.motorR.forward(0.45)
+            self.motorL.forward(0.25)
+            self.motorR.forward(0.20)
         elif cmd == 'B':
             self.motorL.stop()
             self.motorR.stop()
             time.sleep(0.1)
-            self.motorL.backward(0.45)
-            self.motorR.backward(0.5)
+            self.motorL.backward(0.20)
+            self.motorR.backward(0.25)
         elif cmd == 'R':
             self.motorL.stop()
             self.motorR.stop()
             time.sleep(0.1)
-            self.motorL.forward(0.5)
-            self.motorR.backward(0.5)
+            self.motorL.forward(0.25)
+            self.motorR.backward(0.25)
         elif cmd == 'L':
-            self.motorL.backward(0.5)
-            self.motorR.forward(0.5)
+            self.motorL.backward(0.25)
+            self.motorR.forward(0.25)
         elif cmd == 'S':
 
             self.motorL.stop()
@@ -164,7 +164,8 @@ class SocketConnect():
             xyMarvString = '[' + str(xyMarv[0]) + ',' + str(xyMarv[1]) + ']'
             print ("Marvin " + xyMarvString)
 
-            d = sonarObj.readSonar()
+            #reading sonar data from sonarDist
+            d = sonarObj.readSonar(heading)
 
             print ('Sonar Dist Data: ' + str(d))
 
@@ -173,7 +174,7 @@ class SocketConnect():
 ##            print ("Obstacal Location " + obstLocString)
             sockConn.addToSendMessage(str(heading), 2)
             sockConn.addToSendMessage(xyMarvString, 0)
-##            sockConn.addToSendMessage(obstLocString, 1)
+            sockConn.addToSendMessage(str(d), 1)
 
 
 
@@ -185,10 +186,10 @@ class Sonar():
 
         self.sonarDistObj = DistanceSensor()
 
-    def readSonar(self): 
+    def readSonar(self, heading): 
         ''' adds distance read to distance list; dist is in m '''
 
-        return self.sonarDistObj.distance
+        return self.sonarDistObj.getObstacleLoc(heading)
 
 
    
@@ -382,7 +383,7 @@ class MotorR(SourceMixin, CompositeDevice):
         """
         return self.value != 0
 
-    def forward(self, speed=0.5):
+    def forward(self, speed=0.25):
         """
         Drive the motor forwards.
 
@@ -398,7 +399,7 @@ class MotorR(SourceMixin, CompositeDevice):
         self.pwmR.value = speed
 
 
-    def backward(self, speed=0.5):
+    def backward(self, speed=0.25):
         """
         Drive the motor backwards.
 
@@ -475,7 +476,7 @@ class MotorL(SourceMixin, CompositeDevice):
         """
         return self.value != 0
 
-    def forward(self, speed=0.5):
+    def forward(self, speed=0.25):
         """
         Drive the motor forwards.
 
@@ -491,7 +492,7 @@ class MotorL(SourceMixin, CompositeDevice):
         self.pwmL.value = speed
 
 
-    def backward(self, speed=0.5):
+    def backward(self, speed=0.25):
         """
         Drive the motor backwards.
 
@@ -529,7 +530,7 @@ def main(args):
     initialHeading = imuObj.readIMU(0)
     pwm= PWMOutputDevice(25)
     pwm.frequency = 50
-
+    pwm.value = 2.2/100
     
 
 

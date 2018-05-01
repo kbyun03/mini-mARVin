@@ -2,6 +2,7 @@
 # -*- coding: utf-8 -*-
 import RPi.GPIO as GPIO
 from time import time,sleep
+from math import cos, sin
 ##try:
 ##    from statistics import median
 ##except ImportError:
@@ -45,277 +46,252 @@ class DistanceSensor():
         # Make sure the echo pin is low then ensure the echo event is clear
         dist = []
         distTest = []
-        for i in range(0,30):
+        i = 0
+        while i < 30:
             GPIO.output(self.trigger0, True)
             sleep(0.00001)
             GPIO.output(self.trigger0, False)
-            
+
 
             StartTime = time()
             StopTime = time()
             
+            tStart = time()
             while(GPIO.input(self.echo0) == 0):
+                tNow = time()
                 StartTime = time()
+                if (tNow - tStart) >= 5:
+                    GPIO.output(self.trigger0, True)
+                    sleep(0.00001)
+                    GPIO.output(self.trigger0, False)
+                    tStart = time()
+                    continue
+                    
             while(GPIO.input(self.echo0) == 1):
                 StopTime = time()
             TimeElapsed = StopTime - StartTime
             distance0 = (TimeElapsed *34326) / 2
-            print('Front: ' + str(distance0))
-            distTest.append(distance0)
+            if distance0 < 200:
+                i = i + 1
+                print('Front: ' + str(distance0))
+                distTest.append(distance0)
 
         distTest.sort()
+        length = round(len(distTest)/2)
         minDist = distTest[0]
 
         correctedDist = []
         for i in distTest:
+
             if minDist < 2:
                 minDist = i
 
-            if (i > 2) or (i == 2):
+            if (i > 2) or (i == 2) :
                 if (i - minDist) <= 5:
                     correctedDist.append(i)
         print('corrected list: ' + str(correctedDist))
 
-        distance0 = sum(correctedDist) / float(len(correctedDist))
+        if(len(correctedDist) != 0):
+            distance0 = sum(correctedDist) / float(len(correctedDist))
+
+        else:
+            distance0 = 0
+##        distance0 = distTest[length]
+##        print('median dist: ' + str(distance0))
 
 
         dist.append(distance0)
 
-        distTest = []
-        for i in range(0,30):
-            GPIO.output(self.trigger1, True)
-            sleep(0.00001)
-            GPIO.output(self.trigger1, False)
-            
-
-            StartTime = time()
-            StopTime = time()
-            
-            while(GPIO.input(self.echo1) == 0):
-                StartTime = time()
-            while(GPIO.input(self.echo1) == 1):
-                StopTime = time()
-            TimeElapsed = StopTime - StartTime
-            distance1 = (TimeElapsed *34326) / 2
-            distTest.append(distance1)
-
-
-        distTest.sort()
-        minDist = distTest[0]
-
-        correctedDist = []
-        for i in distTest:
-            if minDist < 2:
-                minDist = i
-
-            if (i > 2) or (i == 2):
-                if (i - minDist) <= 5:
-                    correctedDist.append(i)
-            
-
-        print('corrected list: ' + str(correctedDist))
-
-        distance1 = sum(correctedDist) / float(len(correctedDist))
-        dist.append(distance1)
-
-        distTest = []
-        for i in range(0,30):
-            GPIO.output(self.trigger2, True)
-            sleep(0.00001)
-            GPIO.output(self.trigger2, False)
-
-            tStart = time()
-            tNow = time()
-
-            StartTime = time()
-            StopTime = time()
-            while(GPIO.input(self.echo2) == 0):
-                StartTime = time()
-            while(GPIO.input(self.echo2) == 1):
-                StopTime = time()
-            TimeElapsed = StopTime - StartTime
-            distance2 = (TimeElapsed *34326) / 2
-            distTest.append(distance2)
-
-        distTest.sort()
-        minDist = distTest[0]
-
-        correctedDist = []
-        for i in distTest:
-            if minDist < 2:
-                minDist = i
-
-            if (i > 2) or (i == 2):
-                if (i - minDist) <= 5:
-                    correctedDist.append(i)
-
-        print('corrected list: ' + str(correctedDist))
-
-        distance2 = sum(correctedDist) / float(len(correctedDist))
-
-        dist.append(distance2)
-
-        distTest = []
-        for i in range(0,30):
-
-            GPIO.output(self.trigger3, True)
-            sleep(0.00001)
-            GPIO.output(self.trigger3, False)
-            
-
-            StartTime = time()
-            StopTime = time()
-            
-            while(GPIO.input(self.echo3) == 0):
-                StartTime = time()
-            while(GPIO.input(self.echo3) == 1):
-                StopTime = time()
-            TimeElapsed = StopTime - StartTime
-            distance3 = (TimeElapsed *34326) / 2
-            distTest.append(distance3)
-            
-        distTest.sort()
-        minDist = distTest[0]
-        correctedDist = []
-        for i in distTest:
-            if minDist < 2:
-                minDist = i
-
-            if (i > 2) or (i == 2):
-                if (i - minDist) <= 5:
-                    correctedDist.append(i)
-
-        print('corrected list: ' + str(correctedDist))
-
-        distance3 = sum(correctedDist) / float(len(correctedDist))
-        dist.append(distance3)
-       
-       
+##        distTest = []
+##        i = 0
+##        while i < 30:
+##            GPIO.output(self.trigger1, True)
+##            sleep(0.00001)
+##            GPIO.output(self.trigger1, False)
+##
+##
+##
+##
+##            StartTime = time()
+##            StopTime = time()
+##            
+##            tStart = time()
+##            while(GPIO.input(self.echo1) == 0):
+##                tNow = time()
+##                StartTime = time()
+##                if (tNow - tStart) >= 5:
+##                    GPIO.output(self.trigger1, True)
+##                    sleep(0.00001)
+##                    GPIO.output(self.trigger1, False)
+##                    tStart = time()
+##                    continue
+##                    
+##            while(GPIO.input(self.echo1) == 1):
+##                StopTime = time()
+##            TimeElapsed = StopTime - StartTime
+##            distance1 = (TimeElapsed *34326) / 2
+##            if distance1 < 1000:
+##                i = i + 1
+##                print('Back: ' + str(distance1))
+##                distTest.append(distance1)
+##
+##        distTest.sort()
+##        minDist = distTest[0]
+##
+##        correctedDist = []
+##        for i in distTest:
+##
+##            if minDist < 2:
+##                minDist = i
+##
+##            if (i > 2) or (i == 2) :
+##                if (i - minDist) <= 5:
+##                    correctedDist.append(i)
+##        print('corrected list: ' + str(correctedDist))
+##
+##        distance1 = sum(correctedDist) / float(len(correctedDist))
+##
+##
+##        dist.append(distance1)
+##
+##        distTest = []
+##        i = 0
+##        while i < 30:
+##            GPIO.output(self.trigger2, True)
+##            sleep(0.00001)
+##            GPIO.output(self.trigger2, False)
+##
+##
+##
+##
+##            StartTime = time()
+##            StopTime = time()
+##            
+##            tStart = time()
+##            while(GPIO.input(self.echo2) == 0):
+##                tNow = time()
+##                StartTime = time()
+##                if (tNow - tStart) >= 5:
+##                    GPIO.output(self.trigger2, True)
+##                    sleep(0.00001)
+##                    GPIO.output(self.trigger2, False)
+##                    tStart = time()
+##                    continue
+##                    
+##            while(GPIO.input(self.echo2) == 1):
+##                StopTime = time()
+##            TimeElapsed = StopTime - StartTime
+##            distance2 = (TimeElapsed *34326) / 2
+##            if distance2 < 1000:
+##                i = i + 1
+##                print('Left: ' + str(distance2))
+##                distTest.append(distance2)
+##
+##        distTest.sort()
+##        minDist = distTest[0]
+##
+##        correctedDist = []
+##        for i in distTest:
+##
+##            if minDist < 2:
+##                minDist = i
+##
+##            if (i > 2) or (i == 2) :
+##                if (i - minDist) <= 5:
+##                    correctedDist.append(i)
+##        print('corrected list: ' + str(correctedDist))
+##
+##        distance2 = sum(correctedDist) / float(len(correctedDist))
+##
+##
+##        dist.append(distance2)
+##
+##        distTest = []
+##        i = 0
+##        while i < 30:
+##            GPIO.output(self.trigger3, True)
+##            sleep(0.00001)
+##            GPIO.output(self.trigger3, False)
+##
+##
+##
+##
+##            StartTime = time()
+##            StopTime = time()
+##            
+##            tStart = time()
+##            while(GPIO.input(self.echo3) == 0):
+##                tNow = time()
+##                StartTime = time()
+##                if (tNow - tStart) >= 5:
+##                    GPIO.output(self.trigger3, True)
+##                    sleep(0.00001)
+##                    GPIO.output(self.trigger3, False)
+##                    tStart = time()
+##                    continue
+##                    
+##            while(GPIO.input(self.echo3) == 1):
+##                StopTime = time()
+##            TimeElapsed = StopTime - StartTime
+##            distance3 = (TimeElapsed *34326) / 2
+##            if distance3 < 1000:
+##                i = i + 1
+##                print('Right: ' + str(distance3))
+##                distTest.append(distance3)
+##
+##        distTest.sort()
+##        minDist = distTest[0]
+##
+##        correctedDist = []
+##        for i in distTest:
+##
+##            if minDist < 2:
+##                minDist = i
+##
+##            if (i > 2) or (i == 2) :
+##                if (i - minDist) <= 5:
+##                    correctedDist.append(i)
+##        print('corrected list: ' + str(correctedDist))
+##
+##        distance3 = sum(correctedDist) / float(len(correctedDist))
+##
+##
+##        dist.append(distance3)
+##              
 
         return dist
-'''
- def getObstacleLoc(self, heading):
-        
-        Gives obstacle locations as x,y displacements from vechicle
-        ex: if the heading is 0 degree and th front sensor reads an object that is 20cm away and the left sensor reads an object that is 30 cm away, then '[20,0] [0,30]' is
-        returned
+
+    def getObstacleLoc(self, heading):
+        self.distData = self.distance
+
     
         xyListString = ''
-        if len(self.distData) != 0:
-            for i in  range(0,len(self.distData)):
-                if self.distData[i][0] == 0: # if front sensor
-                    d = self.distData[i][1]
-                    if (0 <= heading ) and (heading <= 90):
-                        theta = heading
-                        x = d * cos(theta)
-                        y = d * sin(theta)
-                    elif (90 < heading) and (heading < 180):
-                        theta = 180 - heading
-                        x = -1 * d * cos(theta)
-                        y = d * sin(theta)
 
-                    elif (-180 < heading) and (heading < -90):
-                        theta = heading + 180
-                        x = -1 * d * cos(theta)
-                        y = -1 * d * sin(theta)
+        d = self.distData[0]
+        if (0 <= heading ) and (heading <= 90):
+            theta = heading
+            x = d * cos(theta)
+            y = d * sin(theta)
+        elif (90 < heading) and (heading < 180):
+            theta = 180 - heading
+            x = -1 * d * cos(theta)
+            y = d * sin(theta)
 
-                    elif (-90 < heading ) and (heading < 0):
-                        theta = abs(heading)
-                        x = d * cos(theta)
-                        y = -1 * d * sin(theta)
+        elif (-180 < heading) and (heading < -90):
+            theta = heading + 180
+            x = -1 * d * cos(theta)
+            y = -1 * d * sin(theta)
 
-                elif self.distData[i][0] == 1: # if back sensor, ~ 6' from lidar
-                    d = self.distData[i][1] + (6 * 2.54)
-                    if (0 <= heading) and (heading <= 90):
-                        theta = heading
-                        x = - 1 * d * cos(theta)
-                        y = - 1 * d * sin(theta)
-                    elif (90 < heading) and (heading < 180):
-                        theta = 180 - heading
-                        x = d * cos(theta)
-                        y = - 1 * d * sin(theta)
+        elif (-90 < heading ) and (heading < 0):
+            theta = abs(heading)
+            x = d * cos(theta)
+            y = -1 * d * sin(theta)
 
-                    elif (-180 < heading) and (heading < -90):
-                        theta = heading + 180
-                        x = d * cos(theta)
-                        y = d * sin(theta)
 
-                    elif (-90 < heading) and (heading < 0):
-                        theta = abs(heading)
-                        x = -1 * d * cos(theta)
-                        y = d * sin(theta)
+        xyString = '[' + str(x) + ',' + str(y) + ']'
 
-                elif self.distData[i][0] == 2: # if left sensor, ~
-                    d = self.distData[i][1]
-                    if (0 <= heading ) and (heading <= 90):
-                        theta = 90 - heading
-                        dx = - 6 * cos(theta)
-                        dy = - 6 * sin(theta)
-                        x = -1 * d * cos(theta)
-                        y = d * sin(theta)
+        return xyString
 
-                    elif (90 < heading) and (heading < 180):
-                        theta = 90 - (180 - heading)
-                        dx = cos(theta) * 6
-                        dy = - sin(theta) * 6
-                        x = - 1 * d * cos(theta)
-                        y = - 1 * d * sin(theta)
-
-                    elif (-180 < heading) and (heading < -90):
-                        theta = 90 - (heading + 180)
-                        dx = cos(theta) * 6
-                        dy = sin(theta) * 6
-                        x =  d * cos(theta)
-                        y = -1 * d * sin(theta)
-
-                    elif (-90 < heading ) and (heading < 0):
-                        theta = 90 - abs(heading)
-                        dx = - cos(theta) * 6
-                        dy = sin(theta) * 6
-                        x = d * cos(theta)
-                        y = d * sin(theta)
-
-                    x = x + dx
-                    y = y + dy
-
-                elif self.distData[i][0] == 3: # if right sensor
-                    d = self.distData[i][1]
-                    if (0 <= heading ) and (heading <= 90):
-                        theta = 90 - heading
-                        dx = - cos(theta) * 6
-                        dy = - sin(theta) * 6
-                        x = d * cos(theta)
-                        y = -1 * d * sin(theta)
-
-                    elif (90 < heading) and (heading < 180):
-                        theta = 90 - (180 - heading)
-                        dx = cos(theta) * 6
-                        dy = - sin(theta) * 6
-                        x = d * cos(theta)
-                        y = d * sin(theta)
-
-                    elif (-180 < heading) and (heading < -90):
-                        theta = 90 - (heading + 180)
-                        dx = cos(theta) * 6
-                        dy = sin(theta) * 6
-                        x = -1 * d * cos(theta)
-                        y =  d * sin(theta)
-
-                    elif (-90 < heading ) and (heading < 0):
-                        theta = 90 - abs(heading)
-                        dx = - cos(theta) * 6
-                        dy = sin(theta) * 6
-                        x = -1 * d * cos(theta)
-                        y =  -1 * d * sin(theta)
-
-                xyString = '[' + str(x) + ',' + str(y) + ']'
-                if i is not len(self.distData):
-                    xyString = xyString + ' '
-                xyListString = xyListString + xyString
-        self.distData = []
-
-        return xyListString
-'''
 
 ##sonarObj = DistanceSensor()
 ##
