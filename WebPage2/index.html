@@ -8,7 +8,7 @@
     <meta name="description" content="">
     <meta name="author" content="">
 
-    <title>Creative - Start Bootstrap Theme</title>
+    <title>Project mini-mARVin</title>
 
     <!-- Bootstrap core CSS -->
     <link href="vendor/bootstrap/css/bootstrap.min.css" rel="stylesheet">
@@ -131,13 +131,39 @@
       <div class="container">
         <div class="row">
           <div class="col-lg-8 mx-auto text-center">
-            <h3 class="section-heading text-white">Lidar</h3>
+            <h3 class="section-heading text-white">Localization</h3>
             <hr class="light my-2">
-            <p class="text-faded mb-4">This is how lidar works </p>
+            <p class="text-faded mb-4">Localization is achieved by utilizing the heading data from the IMU and measurements from the
+LiDAR. Based on the heading, two walls are chosen, and the servo turns the LiDAR to face those walls.
+The servo has a range of 180 degrees therefore in most situations it can only face two walls. The LiDAR
+then takes a measurement of the distance to the two walls. Based on which walls are hit the LiDAR
+calculates the x and y position. For example, if the distance to wall 4 is chosen then the x coordinate is
+77cm – the distance. This localization approach is constrained by the accuracy of the IMU. If the heading
+angle from the IMU is very inaccurate than the coordinates calculated will be off significantly. </p>
             
-            <h3 class="section-heading text-white">Sonar</h3>
+            <h3 class="section-heading text-white">IMU</h3>
             <hr class="light my-2">
-            <p class="text-faded mb-4">This is how lidar works </p>
+              <p class = "text-faded mb-4">
+                  IMU is set up as following. <br>
+              
+                  Enable I2C instructions
+              <a class = "portfolio-box" href="image/1.jpg">
+                  <img class = "img-fluid" src= "image/code.jpg" alt="">
+              </a>
+                  Added two lines : I2c-dev ; I2c-bcm2708. Then update /boot/config.text
+                <a class = "portfolio-box" >
+                  <img class = "img-fluid" src= "image/code3.jpg" alt="">
+              </a>
+                Add to the bottom: dtparam =i2c_arm = on ; dtparam = i2c1 = on <br>
+                  Reboot, Connect I2C components, check for component address with i2cdetect <br>
+                  <a class = "portfolio-box" href="image/1.jpg">
+                  <img class = "img-fluid" src= "image/code2.jpg" alt="">
+              </a>
+                  Based on I2C address from step above, change address in LSM9DS0.py
+                  <br>
+              </p>
+              
+           
               
             <h3 class="section-heading text-white">GUI</h3>
             <hr class="light my-2">
@@ -166,10 +192,10 @@
               <div class="portfolio-box-caption">
                 <div class="portfolio-box-caption-content">
                   <div class="project-category text-faded">
-                    Category
+                    
                   </div>
                   <div class="project-name">
-                    Project Name
+                    mini-mARVin Front View
                   </div>
                 </div>
               </div>
@@ -181,25 +207,25 @@
               <div class="portfolio-box-caption">
                 <div class="portfolio-box-caption-content">
                   <div class="project-category text-faded">
-                    Category
+                    GUI
                   </div>
                   <div class="project-name">
-                    Project Name
+                    Mapping mini-mARVin's Location
                   </div>
                 </div>
               </div>
             </a>
           </div>
           <div class="col-lg-4 col-sm-6">
-            <a class="portfolio-box" href="img/portfolio/fullsize/3.jpg">
-              <img class="img-fluid" src="img/portfolio/thumbnails/3.jpg" alt="">
+            <a class="portfolio-box" href="image/local.JPG">
+              <img class="img-fluid" src="image/Thumbnails/local.jpg" alt="">
               <div class="portfolio-box-caption">
                 <div class="portfolio-box-caption-content">
                   <div class="project-category text-faded">
-                    Category
+                    Localization
                   </div>
                   <div class="project-name">
-                    Project Name
+                    Coordinates
                   </div>
                 </div>
               </div>
