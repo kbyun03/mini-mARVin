@@ -102,46 +102,55 @@ class App(QWidget):
         #print(self.d)
 
 
-    def showObstacle(self,ObstPos):
+    def showObstacle(self,ObstPos, CurrPos):
         print("test if there is already another obstacle")
 
         [tankx, tanky] = self.showTankPos()
+        carPosx = int(CurrPos[0])
+        carPosy = int(CurrPos[1])
 
-        ObstPos_x = ObstPos[0]
-        ObstPos_y = ObstPos[1]
+        ObstPos_x = int(ObstPos[0])
+        ObstPos_y = int(ObstPos[1])
+        print("car position x: " + str(ObstPos[0]))
+        print("car position y: " + str(ObstPos[1]))
 
         if ObstPos_x <= 10 and ObstPos_y <= 10:
 
             x = (self.pixbycm_width* ObstPos_x) + 10 + tankx
+            print('x obstacle: ' + str(x))
             y = (self.pixbycm_height* ObstPos_y*-1) + tanky
+            print('y obstacle; ' + str(y))
 
-            if ObstPos_x <= 10:
-                return
-            elif ObstPos_x >= 330:
-                return
-            elif ObstPos_y <= 20:
-                return
-            elif ObstPos_y >= 650:
-                return
+            # if ObstPos_x <= 10:
+            #     return
+            # elif ObstPos_x >= 330:
+            #     return
+            # elif ObstPos_y <= 20:
+            #     return
+            # elif ObstPos_y >= 650:
+            #     return
 
             #print([x,y])
             #print(self.d[self.obstCounter][1])
-            if self.obstCounter != 0:
-                for i in range(0,self.obstCounter):
-                    if [x,y] == self.d[i][1]:
-                        print("The Obstacle is already there")
-                        return
-
+            # if self.obstCounter != 0:
+            #     for i in range(0,self.obstCounter):
+            #         if [x,y] == self.d[i][1]:
+            #             print("The Obstacle is already there")
+            #             return
+            #
 
             #print("The Obstacle is not there")
-            self.d[self.obstCounter][0].move(x, y)
-            self.d[self.obstCounter][1].append(x)
-            self.d[self.obstCounter][1].append(y)
-            #print(self.d)
-            #print(self.d[self.obstCounter])
-            self.d[self.obstCounter][0].show()
-            #print(self.obstCounter)
-            self.obstCounter += 1
+            try:
+                self.d[self.obstCounter][0].move(x, y)
+                self.d[self.obstCounter][1].append(x)
+                self.d[self.obstCounter][1].append(y)
+                #print(self.d)
+                #print(self.d[self.obstCounter])
+                self.d[self.obstCounter][0].show()
+                #print(self.obstCounter)
+                self.obstCounter += 1
+            except:
+                print("I caught an error")
 
 
     def rotate(self, angle):
