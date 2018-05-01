@@ -8,6 +8,7 @@ class App(QWidget):
     #def __init__(self, OtherWindow):
     def __init__(self):
         super().__init__()
+        self.setWindowIcon(QtGui.QIcon('icon.png'))
         print("ths one is on github!!")
         self.setGeometry(100,100,400,720)
         # 715 x 385 => 720x  390
@@ -42,7 +43,11 @@ class App(QWidget):
         self.boarder.setPixmap(self.pixmap_rect)
         self.boarder.adjustSize()
         self.createObstacle()
+        #self.showObstacle([0,10])
+
         self.show()
+
+
 
 
     def moveCar(self, curPos):
@@ -57,12 +62,14 @@ class App(QWidget):
         print(self.showTankPos())
 
         #for testing show obstacle method /// comment it out later
+        """
         if self.showTankPos() == [20, 590]:
             print("show Obstacle is called")
             self.showObstacle([20,round(-15 * self.pixbycm_height,2) + 590])
         elif self.showTankPos() == [60, 590]:
             print("show obstacle is called again")
             self.showObstacle([90,590])
+        """
 
     def showTankPos(self):
         return [self.x, self.y]
@@ -89,27 +96,34 @@ class App(QWidget):
 
     def showObstacle(self,ObstPos):
         print("test if there is already another obstacle")
+
         [tankx, tanky] = self.showTankPos()
-        x = ObstPos[0] + tankx
-        y = (ObstPos[1]*-1) + tanky
-        print([x,y])
-        print(self.d[self.obstCounter][1])
-        if self.obstCounter != 0:
-            for i in range(0,self.obstCounter):
-                if [x,y] == self.d[i][1]:
-                    print("The Obstacle is already there")
-                    return
+
+        ObstPos_x = ObstPos[0]
+        ObstPos_y = ObstPos[1]
+
+        if ObstPos_x <= 10 and ObstPos_y <= 10:
+
+            x = (self.pixbycm_width* ObstPos_x) + 10 + tankx
+            y = (self.pixbycm_height* ObstPos_y*-1) + tanky
+            #print([x,y])
+            #print(self.d[self.obstCounter][1])
+            if self.obstCounter != 0:
+                for i in range(0,self.obstCounter):
+                    if [x,y] == self.d[i][1]:
+                        print("The Obstacle is already there")
+                        return
 
 
-        print("The Obstacle is not there")
-        self.d[self.obstCounter][0].move(x, y)
-        self.d[self.obstCounter][1].append(x)
-        self.d[self.obstCounter][1].append(y)
-        #print(self.d)
-        print(self.d[self.obstCounter])
-        self.d[self.obstCounter][0].show()
-        print(self.obstCounter)
-        self.obstCounter += 1
+            #print("The Obstacle is not there")
+            self.d[self.obstCounter][0].move(x, y)
+            self.d[self.obstCounter][1].append(x)
+            self.d[self.obstCounter][1].append(y)
+            #print(self.d)
+            #print(self.d[self.obstCounter])
+            self.d[self.obstCounter][0].show()
+            #print(self.obstCounter)
+            self.obstCounter += 1
 
 
     def rotate(self, angle):
@@ -141,10 +155,10 @@ class App(QWidget):
         print("this is from print Statement in GUI")
         print(message)
 
-"""
+
 if __name__ == '__main__':
     app = QApplication(sys.argv)
     ex = App()
 
     sys.exit(app.exec_())
-"""
+
