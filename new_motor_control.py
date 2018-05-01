@@ -1,8 +1,10 @@
+#!/usr/bin/env python
+# -*- coding: utf-8 -*-
 from gpiozero.output_devices import PWMOutputDevice, DigitalOutputDevice
 from gpiozero.devices import GPIODevice, Device, CompositeDevice
 from gpiozero.threads import GPIOThread
 from gpiozero.mixins import SourceMixin
-from sonar import DistanceSensor
+from sonarDist import DistanceSensor
 from threading import Lock, Thread
 import socket
 import time
@@ -18,6 +20,7 @@ global sockConn
 global imuObj
 global pwm
 global sonarObj
+
 
 def debug(text):
     if VERBOSE:
@@ -50,7 +53,7 @@ class SocketConnect():
         self.mutex = Lock()
         self.tConn.start()
 
-    def addToSendMessage(self, msg, type):
+    def addToSendMessage(self, msg, a_type):
         '''
             msg is data as a string of x,y coord
             type is either 0 for marvin loc or 1 for obstacle loc; 2 is heading
@@ -59,11 +62,7 @@ class SocketConnect():
             will be delineated by ' '
 
          '''
-        self.mutex.acquire()
-        self.sendMessage = self.sendMessage + self.messageType[type]
-        for i in len(self.messageType):
-            self.sendMessage = self.sendMessage + self.messageType[i] + msg + ';'
-        self.mutex.release()
+        self.sendMessage = self.sendMessage + self.messageType[a_type] + ' ' + msg + ' ' + '; '
 
     def checkConnection(self):
         while (1):
@@ -93,20 +92,16 @@ class SocketConnect():
     def socketSender(self):
 
        while(1):
-           if len(self.sendMessage) is not 0:
-               try:
-                   self.mutex.acquire()
-                   print('sending; ' + self.sendmessage)
+           try:
+
+                if len(self.sendMessage) is not 0:
+                   debug('sending: ' + self.sendMessage)
                    self.conn.sendall(self.sendMessage.encode())
-                   debug('sending message: ' + self.sendMessage)
                    self.sendMessage = ''
-                   self.mutex.release()
-               except socket.error as eMsg:
-                   debug('exception occured in conn.sendall():' + str(eMsg))
-                   self.mutex.acquire()
-                   self.connected = False
-                   self.mutex.release()
-                   break
+
+           except socket.error as eMsg:
+               debug('exception occured in conn.sendall():' + str(eMsg))
+               self.connected = False
 
     def socketReciever(self):
         while (1):
@@ -117,15 +112,11 @@ class SocketConnect():
                 debug('recieved command: ' + cmdStr)
             except socket.error as msg:
                 debug('exception in conn.recv():' + str(msg))
-                self.mutex.acquire()
                 self.connected = False
-                self.mutex.release()
                 break
 
             if len(cmdStr) == 0:
-                self.mutex.acquire()
                 self.connected = False
-                self.mutex.release()
                 break
 
             self.executeCommand(cmdStr)
@@ -166,201 +157,41 @@ class SocketConnect():
             self.motorL.stop()
             self.motorR.stop()
 
-
+            imuObj.reInit()
             heading = imuObj.readIMU(initialHeading)
             print ("Heading %5.2f" % (heading))
             xyMarv = sonarObj.collectAngleVectors(heading)
             xyMarvString = '[' + str(xyMarv[0]) + ',' + str(xyMarv[1]) + ']'
             print ("Marvin " + xyMarvString)
-            sonarObj.readSonar()
-            print ('Sonar Dist Data:')
-            for i in sonarObj.distData:
-                print( 'sonar num: ' + str(i[0]) + 'dist: ' + str(i[1]))
-            obstLocString = sonarObj.getObstacleLoc(heading)
-            print ("Obstacal Location " + obstLocString)
-            sockConn.addToSendMessage(obstLocString, 1)
-            sockConn.addToSendMessage(xyMarvString, 0)
+
+            d = sonarObj.readSonar()
+
+            print ('Sonar Dist Data: ' + str(d))
+
+            
+##            obstLocString = sonarObj.getObstacleLoc(heading)
+##            print ("Obstacal Location " + obstLocString)
             sockConn.addToSendMessage(str(heading), 2)
+            sockConn.addToSendMessage(xyMarvString, 0)
+##            sockConn.addToSendMessage(obstLocString, 1)
+
+
+
 
 
 class Sonar():
     def __init__(self):
         self.sonarSensors = { 'front': 0, 'back': 1, 'left': 2, 'right':3}
-        self.sonar0 = DistanceSensor(echo=17, trigger=4 )# front
-        self.sonar1 = DistanceSensor(echo=5, trigger=6) # back
-        self.sonar2 = DistanceSensor(echo=16, trigger = 12) # left
-        self.sonar3 = DistanceSensor(echo=13, trigger=26) # right
 
-        
-        self.distData = [] # list of data read from sonars... each entry is in form [sonarNum, dist]
+        self.sonarDistObj = DistanceSensor()
 
-        self.currSonars = [] # this list will represent the currently enabled sonar sensors at any time
-        self.currSonarInd = []
-
-        self.obstacleLoc = [] # this list will hold obstacle locations as X,Y coordinates
-
-        self.killThread = False # this will be set
-        #self.tRead = Thread(target = readSonar, name = 'read')
-
-    def enableSonar(self, sonarName):
-        '''sonarName should be given as a string: 'front' '''
-
-        self.currSonars.append(getattr(self, 'sonar' + str(self.sonarSensors[sonarName])))
-        self.currSonarInd.append(sonarName)
-
-    def disableSonar(self, sonarName):
-        '''sonarName should be given as a string: 'front' '''
-        ind = self.currSonarInd.index(sonarName)
-        self.currSonars[ind].close()
-        self.currSonarInd.pop(ind)
-        self.currSonars.pop(ind)
-
-    def startReading(self):
-        ''' kicks off thread'''
-        tRead.start()
-
-    def stopReading(self):
-        self.killThread = True;
-
-    def readSonar(self): # this is a thread
+    def readSonar(self): 
         ''' adds distance read to distance list; dist is in m '''
-        #while(1):
-        for i in self.currSonarInd:
-            mydist = []
-            for j in range(0,12):
-                d = self.currSonars[self.sonarSensors[i]].distance
-                mydist.append(d)
-                print(str(d))
-            mydist.sort()
-            d = mydist[5]
-                
-            self.distData.append([self.sonarSensors[i], d])
 
-        #if self.killThread:
-        #break
+        return self.sonarDistObj.distance
 
-    def getObstacleLoc(self, heading):
-        '''
-        Gives obstacle locations as x,y displacements from vechicle
-        ex: if the heading is 0 degree and th front sensor reads an object that is 20cm away and the left sensor reads an object that is 30 cm away, then '[20,0] [0,30]' is
-        returned
-        '''
-        xyListString = ''
-        if len(self.distData) != 0:
-            for i in  range(0,len(self.distData)):
-                if self.distData[i][0] == 0: # if front sensor
-                    d = self.distData[i][1]
-                    if (0 <= heading ) and (heading <= 90):
-                        theta = heading
-                        x = d * cos(theta)
-                        y = d * sin(theta)
-                    elif (90 < heading) and (heading < 180):
-                        theta = 180 - heading
-                        x = -1 * d * cos(theta)
-                        y = d * sin(theta)
 
-                    elif (-180 < heading) and (heading < -90):
-                        theta = heading + 180
-                        x = -1 * d * cos(theta)
-                        y = -1 * d * sin(theta)
-
-                    elif (-90 < heading ) and (heading < 0):
-                        theta = abs(heading)
-                        x = d * cos(theta)
-                        y = -1 * d * sin(theta)
-
-                elif self.distData[i][0] == 1: # if back sensor, ~ 6' from lidar
-                    d = self.distData[i][1] + (6 * 2.54)
-                    if (0 <= heading) and (heading <= 90):
-                        theta = heading
-                        x = - 1 * d * cos(theta)
-                        y = - 1 * d * sin(theta)
-                    elif (90 < heading) and (heading < 180):
-                        theta = 180 - heading
-                        x = d * cos(theta)
-                        y = - 1 * d * sin(theta)
-
-                    elif (-180 < heading) and (heading < -90):
-                        theta = heading + 180
-                        x = d * cos(theta)
-                        y = d * sin(theta)
-
-                    elif (-90 < heading) and (heading < 0):
-                        theta = abs(heading)
-                        x = -1 * d * cos(theta)
-                        y = d * sin(theta)
-
-                elif self.distData[i][0] == 2: # if left sensor, ~
-                    d = self.distData[i][1]
-                    if (0 <= heading ) and (heading <= 90):
-                        theta = 90 - heading
-                        dx = - 6 * cos(theta)
-                        dy = - 6 * sin(theta)
-                        x = -1 * d * cos(theta)
-                        y = d * sin(theta)
-
-                    elif (90 < heading) and (heading < 180):
-                        theta = 90 - (180 - heading)
-                        dx = cos(theta) * 6
-                        dy = - sin(theta) * 6
-                        x = - 1 * d * cos(theta)
-                        y = - 1 * d * sin(theta)
-
-                    elif (-180 < heading) and (heading < -90):
-                        theta = 90 - (heading + 180)
-                        dx = cos(theta) * 6
-                        dy = sin(theta) * 6
-                        x =  d * cos(theta)
-                        y = -1 * d * sin(theta)
-
-                    elif (-90 < heading ) and (heading < 0):
-                        theta = 90 - abs(heading)
-                        dx = - cos(theta) * 6
-                        dy = sin(theta) * 6
-                        x = d * cos(theta)
-                        y = d * sin(theta)
-
-                    x = x + dx
-                    y = y + dy
-
-                elif self.distData[i][0] == 3: # if right sensor
-                    d = self.distData[i][1]
-                    if (0 <= heading ) and (heading <= 90):
-                        theta = 90 - heading
-                        dx = - cos(theta) * 6
-                        dy = - sin(theta) * 6
-                        x = d * cos(theta)
-                        y = -1 * d * sin(theta)
-
-                    elif (90 < heading) and (heading < 180):
-                        theta = 90 - (180 - heading)
-                        dx = cos(theta) * 6
-                        dy = - sin(theta) * 6
-                        x = d * cos(theta)
-                        y = d * sin(theta)
-
-                    elif (-180 < heading) and (heading < -90):
-                        theta = 90 - (heading + 180)
-                        dx = cos(theta) * 6
-                        dy = sin(theta) * 6
-                        x = -1 * d * cos(theta)
-                        y =  d * sin(theta)
-
-                    elif (-90 < heading ) and (heading < 0):
-                        theta = 90 - abs(heading)
-                        dx = - cos(theta) * 6
-                        dy = sin(theta) * 6
-                        x = -1 * d * cos(theta)
-                        y =  -1 * d * sin(theta)
-
-                xyString = '[' + str(x) + ',' + str(y) + ']'
-                if i is not len(self.distData):
-                    xyString = xyString + ' '
-                xyListString = xyListString + xyString
-        self.distData = []
-
-        return xyListString
-
+   
     # oops this is for lidar
     def adjustAngle(self,angle):
         DutyCycle  = 1.0/18*(angle)+2.2;
@@ -456,37 +287,37 @@ class Sonar():
 
         if heading > 0 and heading <= 45:
             #Collect Data from Walls 4 and 3
-            pwm.value = self.adjustAngle(180-heading)/100
+            pwm.value = self.adjustAngle(90+heading)/100
             time.sleep(.5)
             x = maxX- self.readLiDAR()
-            pwm.value = self.adjustAngle(90-heading)/100
+            pwm.value = self.adjustAngle(0+heading)/100
             time.sleep(.5)
             y = maxY- self.readLiDAR()
 
         if heading > 45 and heading <= 90:
             #Collect Data from Walls 4 and 3
-            pwm.value = self.adjustAngle(180-heading)/100
+            pwm.value = self.adjustAngle(90+heading)/100
             time.sleep(.5)
             x = maxX- self.readLiDAR()
-            pwm.value = self.adjustAngle(90-heading)/100
+            pwm.value = self.adjustAngle(0+heading)/100
             time.sleep(.5)
             y = maxY- self.readLiDAR()
 
         if heading > 90 and heading <= 135:
             #Collect Data from Walls 2 and 3
-            pwm.value = self.adjustAngle(180-heading+90)/100
+            pwm.value = self.adjustAngle(heading-90)/100
             time.sleep(.5)
             x = self.readLiDAR()
-            pwm.value = self.adjustAngle(90-heading+90)/100
+            pwm.value = self.adjustAngle(heading)/100
             time.sleep(.5)
             y = maxY-self.readLiDAR()
 
         if heading > 135:
             #Collect Data from Walls 2 and 3
-            pwm.value = self.adjustAngle(180-heading+90)/100
+            pwm.value = self.adjustAngle(heading-90)/100
             time.sleep(.5)
             x = self.readLiDAR()
-            pwm.value = self.adjustAngle(90-heading+90)/100
+            pwm.value = self.adjustAngle(heading)/100
             time.sleep(.5)
             y = maxY- self.readLiDAR()
 
@@ -685,6 +516,8 @@ class MotorL(SourceMixin, CompositeDevice):
 
 def main(args):
 
+    time.sleep(30)
+
     global sockConn
     global sonarObj
     global imuObj
@@ -696,17 +529,10 @@ def main(args):
     initialHeading = imuObj.readIMU(0)
     pwm= PWMOutputDevice(25)
     pwm.frequency = 50
-    pwm.value = 2.2/100
-    #while(1):
-    #    obstLocString = ''
-    sonarObj.enableSonar('front')
-    sonarObj.enableSonar('back')
-    sonarObj.enableSonar('left')
-    sonarObj.enableSonar('right')
+
+    
 
 
-    #    if sockConn.connected:
-            #sonarObj.startReading()
 
     '''
             while sockConn.connected:
