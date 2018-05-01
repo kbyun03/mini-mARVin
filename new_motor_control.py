@@ -69,28 +69,28 @@ class SocketConnect():
 ##        self.mutex.release()
 
     def checkConnection(self):
+        global initialHeading
         while (1):
-            self.mutex.acquire()
+
             if (not self.connected) and (not self.openConnection):
                 self.conn, self.addr = self.socket.accept()
                 debug('connected')
                 self.connected = True
                 self.openConnection = True
-                self.mutex.release()
                 self.tSend.start()
                 self.tRecv.start()
                 self.motorR = MotorR()
                 self.motorL = MotorL()
+                initialHeading = imuObj.readIMU(0)
             elif (not self.connected) and (self.openConnection):
                 self.closeConn()
                 self.openConnection = False
-                self.mutex.release()
+
         
             if self.quit:
                 if self.openConnection or self.connected:
                     self.closeConn()
                     self.openConnection = False
-                self.mutex.release()
                 break
 
     def socketSender(self):
@@ -102,7 +102,7 @@ class SocketConnect():
                 if len(self.sendMessage) is not 0:
                    print('sending ' + self.sendMessage)
                    tempSocket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-                   tempSocket.connect(('lawn-143-215-98-38.lawn.gatech.edu', 12001))
+                   tempSocket.connect(('lawn-143-215-106-82.lawn.gatech.edu', 12001))
                    print('msg is:' + self.sendMessage)
                    tempSocket.sendall(self.sendMessage.encode())
                    self.sendMessage = ''
@@ -703,7 +703,7 @@ def main(args):
     sockConn = SocketConnect(12000) ## starts recv and send threads; recv thread passes cmds directly to executeCommand to control motor
     sonarObj = Sonar()
     imuObj = ImuPosHeading()
-    initialHeading = imuObj.readIMU(0)
+
     pwm= PWMOutputDevice(25)
     pwm.frequency = 50
     pwm.value = 2.2/100
