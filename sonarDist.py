@@ -2,10 +2,10 @@
 # -*- coding: utf-8 -*-
 import RPi.GPIO as GPIO
 from time import time,sleep
-##try:
-##    from statistics import median
-##except ImportError:
-##    from .compat import median
+try:
+   from statistics import median
+except ImportError:
+   from .compat import median
 
 class DistanceSensor():
 
@@ -193,12 +193,12 @@ class DistanceSensor():
        
 
         return dist
-'''
+
  def getObstacleLoc(self, heading):
         
-        Gives obstacle locations as x,y displacements from vechicle
-        ex: if the heading is 0 degree and th front sensor reads an object that is 20cm away and the left sensor reads an object that is 30 cm away, then '[20,0] [0,30]' is
-        returned
+        # Gives obstacle locations as x,y displacements from vechicle
+        # ex: if the heading is 0 degree and th front sensor reads an object that is 20cm away and the left sensor reads an object that is 30 cm away, then '[20,0] [0,30]' is
+        # returned
     
         xyListString = ''
         if len(self.distData) != 0:
@@ -315,7 +315,7 @@ class DistanceSensor():
         self.distData = []
 
         return xyListString
-'''
+
 
 ##sonarObj = DistanceSensor()
 ##
